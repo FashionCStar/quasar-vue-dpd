@@ -4,31 +4,20 @@
       <q-form
         @submit="login"
         class="text-center q-pa-md shadow-3 bg-white q-mx-auto"
-        style="max-width: 400px; border-radius: 10px;"
+        style="max-width: 400px; border-radius: 10px; background-color: "
       >
-        <div class="q-mt-lg text-center" style="font-size: 28px">Login to XXXXXXXXXX</div>
+        <div class="q-mt-md" >
+          <img :src="require('../../assets/images/logo_login.png')" style="max-height:80px; width: 100%" />
+        </div>
         <div class="row justify-between q-col-gutter-md" >
           <div class="col-12">
-            <q-input outlined color="teal-10" v-model="userData.email" clearable label="Email Address" class="q-ml-none">
+            <q-input outlined color="white" v-model="userData.email" clearable label="Email Address" class="q-ml-none bg-white">
               <template v-slot:prepend>
                 <q-icon name="account_circle" />
               </template>
             </q-input>
           </div>
           <div class="col-12">
-            <!--<q-input-->
-              <!--outlined-->
-              <!--color="teal-10"-->
-              <!--label="Password"-->
-              <!--v-model="userData.password"-->
-              <!--type="password"-->
-              <!--clearable-->
-              <!--hide-show-password-->
-            <!--&gt;-->
-              <!--<template v-slot:prepend>-->
-                <!--<q-icon name="lock" />-->
-              <!--</template>-->
-            <!--</q-input>-->
             <base-text-field
               outlined
               color="teal-10"
@@ -48,9 +37,9 @@
           </div>
         </div>
         <q-item class="q-mx-none q-px-none">
-          <q-item-section>
+          <!-- <q-item-section>
             <q-checkbox v-model="remember" label="Remember me" color="teal" />
-          </q-item-section>
+          </q-item-section> -->
           <q-item-section>
             <router-link to="/">
               Forgot your password?
@@ -60,7 +49,7 @@
         <q-btn type="submit" class="full-width bg-cyan-7 text-white">
           Sign In
         </q-btn>
-        <div class="row">
+        <!-- <div class="row">
           <div class="col-5">
             <q-linear-progress :value="0" size="1px" class="q-mt-sm" />
           </div>
@@ -73,7 +62,7 @@
         </div>
         <q-btn class="full-width bg-orange-6 text-white" :to="{name: 'Signup'}">
           Join XXXXXXXXXXXXX
-        </q-btn>
+        </q-btn> -->
       </q-form>
     </div>
   </div>
@@ -81,7 +70,7 @@
 
 <style>
   #bgImage {
-    background: url(../../assets/images/dark-material-bg.jpg) 50% 50% / cover no-repeat;
+    background: url(../../assets/images/background.png) 50% 50% / cover no-repeat;
     overflow: auto;
     padding: 2.1rem 0 2.8rem;
     min-height: 100vh;

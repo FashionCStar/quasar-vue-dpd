@@ -6,7 +6,7 @@
       elevated
       class="toolbar-grad"
     >
-      <q-toolbar>
+      <q-toolbar style="background-color: #272B33">
         <q-btn
           flat
           dense
@@ -28,17 +28,17 @@
             <template v-slot:label>
               <div class="row items-center no-wrap">
                 <q-avatar size="50px;">
-                  <img src="https://cdn.quasar.dev/img/avatar.png">
+                  <q-icon name="fas fa-user" />
                 </q-avatar>
-                <div class="text-center q-px-sm">
+                <!-- <div class="text-center q-px-sm">
                   {{user.first_name}}
-                </div>
+                </div> -->
               </div>
             </template>
-            <q-list>
+            <q-list style="background-color: #272B33" class="text-white">
               <q-item clickable v-close-popup :to="{name: 'MyProfile'}">
                 <q-item-section avatar>
-                  <q-avatar icon="far fa-user-circle" text-color="black" />
+                  <q-avatar icon="far fa-user-circle" />
                 </q-item-section>
                 <q-item-section>
                   <q-item-label>My Profile</q-item-label>
@@ -47,7 +47,7 @@
 
               <q-item clickable v-close-popup @click="logout">
                 <q-item-section avatar>
-                  <q-avatar icon="logout" text-color="black" />
+                  <q-avatar icon="logout" />
                 </q-item-section>
                 <q-item-section>
                   <q-item-label>Logout</q-item-label>
@@ -57,7 +57,7 @@
           </q-btn-dropdown>
         </div>
         <!-- <div>Quasar v{{ $q.version }}</div> -->
-        <q-btn
+        <!-- <q-btn
           :icon="$q.dark.isActive ? 'mdi-brightness-5' : 'mdi-brightness-4'"
           flat
           dense
@@ -70,7 +70,7 @@
             floating
             transparent
           >new</q-badge>
-        </q-btn>
+        </q-btn> -->
       </q-toolbar>
       <router-view
         name="tabs"
@@ -84,19 +84,16 @@
     >
       <!-- TODO:: move drawer items to a separate file -->
       <q-list>
-        <!-- <q-item
+        <q-item
           clickable
           to="/dashboard"
+          class="q-pa-none"
         >
-          <q-item-section avatar>
-            <q-icon name="home" />
-          </q-item-section>
           <q-item-section>
-            <q-item-label>Home</q-item-label>
-            <q-item-label caption>Home</q-item-label>
+            <q-img :src="require('../assets/images/dpd_logo.png')" style="width:100%; height:62px;"/>
           </q-item-section>
         </q-item>
-        <q-separator /> -->
+        <q-separator />
         <base-drawer />
       </q-list>
     </q-drawer>
@@ -127,6 +124,10 @@
   </q-layout>
 </template>
 
+<style lang="stylus">
+.q-drawer__content
+  background-color: #3E444E
+</style>
 <script>
 import BaseDrawer from 'components/Drawers/BaseDrawer'
 import { openURL } from 'quasar'

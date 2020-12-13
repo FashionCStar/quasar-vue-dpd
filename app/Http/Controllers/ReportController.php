@@ -15,6 +15,15 @@ use Illuminate\Support\Facades\Auth;
 class ReportController extends Controller
 {
   //
+  public function getRNCID(Request $request) {
+    if (Auth::user()) {
+      $user_id = Auth::user()->id;
+      $rnc = Courier::firstOrNew(['courier_name' => 'RNC']);
+      $rnc->user_id = $user_id;
+      $rnc->save();
+      return response()->json(['success' => 'success', 'data'=>$rnc->id], 200, [], JSON_NUMERIC_CHECK);
+    }
+  }
   public function createSingleRecord (Request $request) {
     if (Auth::user()) {
       $reportInfo = $request['data'];
@@ -74,26 +83,31 @@ class ReportController extends Controller
       $reportInfo = $request['data'];
       $user_id = Auth::user()->id;
       try {
-        $lastReportNo = count(Report::whereUserId($user_id)->where('report_date', $reportInfo['report_date'])->select('report_no')->groupBy('report_no')->orderBy('report_no', 'DESC')->get());
-        $report_no = $reportInfo['report_date'] . '-' . ($lastReportNo+1);
+        $lastReport = Report::whereUserId($user_id)->where('report_date', $reportInfo['report_date'])->where('is_group', 1)->get();
+        if (count($lastReport)) {
+          return response()->json(['message' => `Today's Report is already created`], 500);
+        } else {
+          $lastReportNo = count(Report::whereUserId($user_id)->where('report_date', $reportInfo['report_date'])->select('report_no')->groupBy('report_no')->orderBy('report_no', 'DESC')->get());
+          $report_no = $reportInfo['report_date'] . '-' . ($lastReportNo+1);
 
-        $rnc = Courier::firstOrNew(['courier_name' => 'RNC']);
-        $rnc->user_id = $user_id;
-        $rnc->save();
-        
-        foreach($reportInfo['report_data'] as $data) {
-          $report = new Report;
-          $report->user_id = $user_id;
-          $report->courier_id = $data['courier_id']=='RNC' ? $rnc->id : $data['courier_id'];
-          $report->route_id = $data['route_id'];
-          // $report->report_title = $reportInfo['report_title']?$reportInfo['report_title']:'';
-          $report->report_date = $reportInfo['report_date'];
-          $report->report_no = $report_no;
-          $report->is_group = 1;
-          $report->save();
+          $rnc = Courier::firstOrNew(['courier_name' => 'RNC']);
+          $rnc->user_id = $user_id;
+          $rnc->save();
+          
+          foreach($reportInfo['report_data'] as $data) {
+            $report = new Report;
+            $report->user_id = $user_id;
+            $report->courier_id = $data['courier_id']=='RNC' ? $rnc->id : $data['courier_id'];
+            $report->route_id = $data['route_id'];
+            // $report->report_title = $reportInfo['report_title']?$reportInfo['report_title']:'';
+            $report->report_date = $reportInfo['report_date'];
+            $report->report_no = $report_no;
+            $report->is_group = 1;
+            $report->save();
+          }
+          // $reportData = [];
+          return response()->json(['success' => 'Report is successfully created'], 200, [], JSON_NUMERIC_CHECK);
         }
-        // $reportData = [];
-        return response()->json(['success' => 'Report is successfully created'], 200, [], JSON_NUMERIC_CHECK);
       } catch (\Exception $e) {
         return response()->json(['message' => 'Report create failed'], 500);
       }
@@ -155,7 +169,7 @@ class ReportController extends Controller
     if (Auth::user()) {
       $user = Auth::user();
       if ($user->user_type == '0') {
-        $routes = Route::where('route_type', 0)->get();
+        $routes = Route::where('route_type', 0)->where()->get();
       } else {
         $routes = Route::whereUserId($user->id)->where('route_type', 0)->get();
       }
@@ -233,6 +247,47 @@ class ReportController extends Controller
         } else {
           $totalCount = count(Report::whereUserId($user->id)->where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->select(['report_no'])->groupBy('report_no')->get());
           $reports = Report::with(['user'])->whereUserId($user->id)->where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->select(['id', 'report_date', 'report_no', 'user_id', 'courier_id', 'route_id', 'is_group'])->groupBy('report_no')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+        }
+      }
+      if ($totalCount == 0) {
+        return response()->json(['success'=>'success', 'totalCount' => $totalCount, 'data' => []], 200, [], JSON_NUMERIC_CHECK);
+      } else {
+        return response()->json(['success'=>'success', 'totalCount' => $totalCount, 'data' => $reports], 200, [], JSON_NUMERIC_CHECK);
+      }
+    } else {
+      return response()->json(['failed'=>'failed'], 401);
+    }
+  }
+
+  public function getReportsAll(Request $request) {
+    if (Auth::user()) {
+      $user = Auth::user();
+      $sortBy = $request['sortBy'] ? $request['sortBy'] : 'report_date';
+      $desc = $request['descending'] ? 'DESC' : 'ASC';
+      $fromDate = $request['fromDate'];
+      $endDate = $request['endDate'];
+      
+      if ($request['conditions'] && $request['conditions']['filter']) {
+        $search = $request['conditions']['filter'];
+        if ($user->user_type == '0') {
+          // $totalCount = count(Report::where('report_date', 'like', '%' . $search . '%')->where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->select(['report_no'])->groupBy('report_no')->get());
+          $reports = Report::with(['user'])->where('report_date', 'like', '%' . $search . '%')->where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->select(['id', 'report_date', 'report_no', 'user_id', 'courier_id', 'route_id', 'is_group'])->groupBy('report_no')->orderBy($sortBy, $desc)->get();
+          $totalCount = count($reports);
+        } else {
+          // $totalCount = count(Report::whereUserId($user->id)->where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->where('report_date', 'like', '%' . $search . '%')->select(['report_no'])->groupBy('report_no')->get());
+          $reports = Report::with(['user'])->whereUserId($user->id)->where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->where('report_date', 'like', '%' . $search . '%')->select(['id', 'report_date', 'report_no', 
+          'user_id', 'courier_id', 'route_id', 'is_group'])->groupBy('report_no')->orderBy($sortBy, $desc)->get();
+          $totalCount = count($reports);
+        }
+      } else {
+        if ($user->user_type == '0') {
+          // $totalCount = count(Report::where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->select(['report_no'])->groupBy('report_no')->get());
+          $reports = Report::with(['user'])->where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->select(['id', 'report_date', 'report_no', 'user_id', 'courier_id', 'route_id', 'is_group'])->groupBy('report_no')->orderBy($sortBy, $desc)->get();
+          $totalCount = count($reports);
+        } else {
+          // $totalCount = count(Report::whereUserId($user->id)->where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->select(['report_no'])->groupBy('report_no')->get());
+          $reports = Report::with(['user'])->whereUserId($user->id)->where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->select(['id', 'report_date', 'report_no', 'user_id', 'courier_id', 'route_id', 'is_group'])->groupBy('report_no')->orderBy($sortBy, $desc)->get();
+          $totalCount = count($reports);
         }
       }
       if ($totalCount == 0) {

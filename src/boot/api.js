@@ -88,8 +88,14 @@ class RestApi {
   async getReports (params) {
     return this.instance.post('/getReports', params)
   }
+  async getReportsAll (params) {
+    return this.instance.post('/getReportsAll', params)
+  }
   async getMonthlyReports (params) {
     return this.instance.post('/getMonthlyReports', params)
+  }
+  async getMonthlyReportsAll (params) {
+    return this.instance.post('/getMonthlyReportsAll', params)
   }
   async getReportInfo (reportNo) {
     return this.instance.get('/getReportDetails?reportNo=' + reportNo)
@@ -102,6 +108,9 @@ class RestApi {
   }
   async getCourierList () {
     return this.instance.get('/getCourierList')
+  }
+  async getRNCID () {
+    return this.instance.get('/getRNCID')
   }
   async getCouriers (params) {
     return this.instance.post('/getCouriers', params)

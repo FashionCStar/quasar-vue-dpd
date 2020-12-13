@@ -46,12 +46,15 @@ Route::group(['middleware' => 'auth:api'], function () {
   Route::post('/updateRoute', 'ReportController@updateRoute');
   Route::post('/removeRoute', 'ReportController@removeRoute');
   Route::post('/getReports', 'ReportController@getReports');
+  Route::post('/getReportsAll', 'ReportController@getReportsAll');
   // Route::post('/getMonthlyReports', 'ReportController@getMonthlyReports');
   Route::post('/getMonthlyReports', 'ReportController@getMonthlyAll');
+  Route::post('/getMonthlyReportsAll', 'ReportController@getMonthlyAll');
   Route::post('/createReport', 'ReportController@createReport');
   Route::get('/getReportDetails', 'ReportController@getReportDetails');
   Route::post('/updateReport', 'ReportController@updateReport');
   Route::post('/removeReport', 'ReportController@removeReport');
   Route::post('/createSingleRecord', 'ReportController@createSingleRecord');
   Route::post('/updateSingleRecord', 'ReportController@updateSingleRecord');
+  Route::get('/getRNCID', 'ReportController@getRNCID');
 });
