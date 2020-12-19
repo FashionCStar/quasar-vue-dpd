@@ -20,7 +20,7 @@ class UserController extends Controller
   public function login()
   {
     $credentials = [
-      'email' => request('email'),
+      'name' => request('name'),
       'password' => request('password')
     ];
 
@@ -31,7 +31,7 @@ class UserController extends Controller
 
     return response()->json([
       'error' => 'Unauthorised',
-      'message' => 'Wrong email or password.'
+      'message' => 'Wrong username or password.'
     ], 404);
   }
 

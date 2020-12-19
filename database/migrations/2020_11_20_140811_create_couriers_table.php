@@ -16,7 +16,7 @@ class CreateCouriersTable extends Migration
         Schema::create('couriers', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('user_id')->unsigned();
-            $table->string('courier_name')->unique();
+            $table->string('courier_name');
             $table->string('deleted_date')->nullable();
             $table->timestamps();
         });

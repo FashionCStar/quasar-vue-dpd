@@ -106,8 +106,8 @@ class RestApi {
   async getExtraRoutes () {
     return this.instance.get('/getExtraRoutes')
   }
-  async getCourierList () {
-    return this.instance.get('/getCourierList')
+  async getCourierList (datetime) {
+    return this.instance.get('/getCourierList?report_datetime=' + datetime)
   }
   async getRNCID () {
     return this.instance.get('/getRNCID')
@@ -141,6 +141,9 @@ class RestApi {
   }
   async updateSingleRecord (params) {
     return this.instance.post('/updateSingleRecord', params)
+  }
+  async removeSingleRecord (params) {
+    return this.instance.post('/removeSingleRecord', params)
   }
   async createReport (params) {
     return this.instance.post('/createReport', params)

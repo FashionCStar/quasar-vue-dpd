@@ -227,6 +227,8 @@ import 'quasar/dist/quasar.sass'
 
 import 'src/css/app.sass'
 
+import 'src/css/quasar.variables.sass'
+
 import '@quasar/quasar-ui-qcalendar/src/index.sass'
 
 

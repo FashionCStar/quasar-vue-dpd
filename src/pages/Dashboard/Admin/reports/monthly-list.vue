@@ -3,72 +3,48 @@
     <template>
       <div>
         <q-table
-          class="my-sticky-dynamic"
+          :class="is_mobile?'my-sticky-dynamic table-top-mobile':'my-sticky-dynamic'"
           :data="monthlyList"
           :columns="userLevel === 'admin' ? columns_admin : columns"
           row-key="report_date"
           :filter="filter"
-          @request="getMonthlyAll"
+          @request="getMonthlyList"
           binary-state-sort
-          virtual-scroll
-          :virtual-scroll-item-size="48"
-          :virtual-scroll-sticky-size-start="48"
           :pagination.sync="pagination"
-          :rows-per-page-options="[0]"
         >
           <template v-slot:top>
             <div class="col-6 row justify-start">
-              <q-input dense debounce="300" v-model="filter" placeholder="Search" input-class="text-white" color="blue-7" style="width:120px;" >
+              <q-input dense debounce="300" v-model="filter" placeholder="Search" input-class="text-white" color="blue-7" style="width:168px;" >
                 <template v-slot:append> <q-icon name="search" color="white"/> </template>
               </q-input>
             </div>
             <div class="col-6 row justify-end">
-              <!-- <div class="items-center q-ml-xs">
-                <q-input dense v-model="fromDate" color="cyan-7" type="date" style="width:151px;" class="q-mt-xs" />
-              </div>
-              <div class="items-center q-ml-xs">
-                <q-input dense v-model="endDate" color="cyan-7" type="date" style="width:151px;" class="q-mt-xs" />
-              </div> -->
-              <q-input dense v-model="fromDate" style="width:120px;" input-class="text-white" color="blue-7">
+              <q-input dense v-model="fromDate" style="width:168px;" input-class="text-white" color="blue-7" class="q-mb-sm">
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer" color="white">
                     <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
-                      <div>
-                        <q-calendar
-                          ref="calendar"
-                          v-model="fromDate"
-                          show-work-weeks
-                          view="month"
-                          mini-mode
-                          enable-outside-days
-                          bordered
-                          @input="onFromDateChanged"
-                          locale="en-us"
-                          :class="$q.dark.isActive ? 'bg-blue-grey-3': 'bg-grey-1' "
-                          style="max-width: 300px; max-height:180px; min-width: auto; overflow: hidden; "
-                        />
-                      </div>
+                      <q-date v-model="fromDate"
+                        minimal
+                        @input="onFromDateChanged"
+                        mask="DD/MM/YY ddd"
+                        color="blue-7"
+                      >
+                      </q-date>
                     </q-popup-proxy>
                   </q-icon>
                 </template>
               </q-input>
-              <q-input dense v-model="endDate" style="width:120px;" input-class="text-white" color="blue-7" class="q-ml-xs">
+              <q-input dense v-model="endDate" style="width:168px;" input-class="text-white" color="blue-7" class="q-ml-xs q-mb-sm">
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer" color="white">
                     <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
-                      <q-calendar
-                        ref="calendar"
-                        v-model="endDate"
-                        show-work-weeks
-                        view="month"
-                        mini-mode
-                        enable-outside-days
-                        bordered
+                      <q-date v-model="endDate"
+                        minimal
                         @input="onEndDateChanged"
-                        locale="en-us"
-                        :class="$q.dark.isActive ? 'bg-blue-grey-3': 'bg-grey-1' "
-                        style="max-width: 300px; max-height:180px; min-width: auto; overflow: hidden"
-                      />
+                        mask="DD/MM/YY ddd"
+                        color="blue-7"
+                      >
+                      </q-date>
                     </q-popup-proxy>
                   </q-icon>
                 </template>
@@ -78,41 +54,51 @@
 
           <template v-slot:body="props">
             <q-tr :props="props" @click="goToSingleDetail(props.row)">
-              <!-- <q-td key="index" :props="props">{{ props.row.index }}</q-td> -->
-              <q-td key="report_date" :props="props">{{ props.row.report_date }}</q-td>
-              <q-td v-if="userLevel === 'admin'" key="user_name" :props="props">{{ props.row.user.name }}</q-td>
-              <q-td key="courier_name" :props="props">{{ props.row.courier_name }}</q-td>
+              <q-td key="index" :props="props">{{ props.row.index }}</q-td>
+              <q-td key="created_at" :props="props" class="text-uppercase">{{ changeDateFormat(props.row.created_at) }}</q-td>
               <q-td key="route_number" :props="props">{{ props.row.route_number }}</q-td>
-              <q-td key="is_group" :props="props">{{ props.row.is_group === 1 ? 'FD Routes':'Extra Routes' }}</q-td>
-              <!-- <q-td key="buttons" :props="props">
-                <q-btn
-                  :icon=" 'fas fa-pen-alt' "
-                  @click.native.stop
-                  @click="goToDetail(props.row.id)"
-                />
-                <q-btn
-                  :icon=" 'fas fa-trash-alt' "
-                  @click.native.stop
-                  @click="remove(props.row)"
-                />
-              </q-td> -->
+              <q-td key="courier_name" :props="props">{{ props.row.courier_name }}</q-td>
+              <q-td key="is_group" :props="props">{{ props.row.is_group === 1 ? 'DAILY':'EXTRA' }}</q-td>
+              <q-td v-if="userLevel === 'admin'" key="user_name" :props="props">{{ props.row.user.name }}</q-td>
             </q-tr>
           </template>
 
-          <template v-slot:bottom>
-            <div class="col-6 row">
-              Total Records: {{pagination.rowsNumber}}
-            </div>
-            <div class="col-6 row justify-end">
-              <q-btn
-                color="blue-7"
-                label="Export"
-                no-caps
-                dense
-                @click="exportTable"
-                class="q-mr-xs q-mt-xs"
-                style="width: 100px; height:30px"
-              />
+          <template v-slot:bottom="props">
+            <div class="col-12 row justify-between">
+              <div class="q-my-auto">
+                <q-btn
+                  label="Export"
+                  no-caps
+                  dense
+                  rounded
+                  outline
+                  @click="exportTable"
+                  class="q-ma-none"
+                  style="width: 60px; height:30px"
+                />
+              </div>
+              <div class="col-6 row justify-end items-center">
+                Total Records: {{pagination.rowsNumber}}
+                <q-btn
+                  icon="chevron_left"
+                  color="grey-8"
+                  round
+                  dense
+                  flat
+                  :disable="props.isFirstPage"
+                  @click="props.prevPage"
+                />
+                <span>{{props.pagination.page}} / {{Math.ceil(props.pagination.rowsNumber / props.pagination.rowsPerPage)}}</span>
+                <q-btn
+                  icon="chevron_right"
+                  color="grey-8"
+                  round
+                  dense
+                  flat
+                  :disable="props.isLastPage"
+                  @click="props.nextPage"
+                />
+              </div>
             </div>
           </template>
         </q-table>
@@ -233,31 +219,6 @@
   </q-page>
 </template>
 
-<style lang="stylus">
-.my-sticky-dynamic
-  /* height or max-height is important */
-  height: calc(100vh - 62px)
-
-  .q-table__top,
-  .q-table__bottom
-    background-color: #3E444E
-    color: white
-
-  thead tr:first-child th /* bg color is important for th; just specify one */
-    background-color: #272B33
-    color: white
-
-  thead tr th
-    position: sticky
-    z-index: 1
-  /* this will be the loading indicator */
-  thead tr:last-child th
-    /* height of all previous header rows */
-    top: 48px
-  thead tr:first-child th
-    top: 0
-</style>
-
 <script>
 
 import { api } from 'src/boot/api'
@@ -287,30 +248,32 @@ export default {
     return {
       filter: '',
       fromDate: '',
+      fromDateAPI: '',
       endDate: '',
+      endDateAPI: '',
       showDetail: false,
       pagination: {
-        sortBy: 'report_date',
-        descending: false,
+        sortBy: 'created_at',
+        descending: true,
         page: 1,
         rowsPerPage: 10,
         rowsNumber: 20
       },
       columns: [
-        // { name: 'index', required: true, label: 'No', align: 'left', field: 'index', sortable: true },
-        { name: 'report_date', required: true, label: 'DATE', align: 'left', field: 'report_date' },
+        { name: 'index', required: true, label: 'NO', align: 'left', field: 'index' },
+        { name: 'created_at', required: true, label: 'DATE', align: 'left', field: 'created_at' },
         // { name: 'user_name', required: true, label: 'MANAGER', align: 'left', field: 'user_name', sortable: true },
-        { name: 'courier_name', required: true, label: 'DRIVER', align: 'left', field: 'courier_name' },
         { name: 'route_number', required: true, label: 'ROUTE', align: 'left', field: 'route_number' },
+        { name: 'courier_name', required: true, label: 'DRIVER', align: 'left', field: 'courier_name' },
         { name: 'is_group', required: true, label: 'TYPE', align: 'left', field: 'is_group' }
       ],
       columns_admin: [
-        // { name: 'index', required: true, label: 'No', align: 'left', field: 'index', sortable: true },
-        { name: 'report_date', required: true, label: 'DATE', align: 'left', field: 'report_date' },
-        { name: 'user_name', required: true, label: 'USER', align: 'left', field: 'user_name' },
-        { name: 'courier_name', required: true, label: 'DRIVER', align: 'left', field: 'courier_name' },
+        { name: 'index', required: true, label: 'NO', align: 'left', field: 'index' },
+        { name: 'created_at', required: true, label: 'DATE', align: 'left', field: 'created_at' },
         { name: 'route_number', required: true, label: 'ROUTE', align: 'left', field: 'route_number' },
-        { name: 'is_group', required: true, label: 'TYPE', align: 'left', field: 'is_group' }
+        { name: 'courier_name', required: true, label: 'DRIVER', align: 'left', field: 'courier_name' },
+        { name: 'is_group', required: true, label: 'TYPE', align: 'left', field: 'is_group' },
+        { name: 'user_name', required: true, label: 'USER', align: 'left', field: 'user_name' }
       ],
       monthlyList: [],
       selectedRecord: {
@@ -325,27 +288,8 @@ export default {
       routes: [],
       couriers: [],
       filteredNames: [],
-      rnc_id: ''
-    }
-  },
-  watch: {
-    fromDate: {
-      handler: function (after, before) {
-        // this.getMonthlyList({
-        //   pagination: this.pagination,
-        //   filter: this.filter
-        // })
-      },
-      deep: true
-    },
-    endDate: {
-      handler: function (after, before) {
-        // this.getMonthlyList({
-        //   pagination: this.pagination,
-        //   filter: this.filter
-        // })
-      },
-      deep: true
+      rnc_id: '',
+      is_mobile: false
     }
   },
   computed: {
@@ -357,23 +301,40 @@ export default {
     }
   },
   mounted () {
+    this.checkPlatform()
     this.$store.commit('auth/pageTitle', this.$router.currentRoute.meta.title)
-    this.fromDate = date.formatDate(new Date(), 'YYYY-MM-DD')
-    this.endDate = date.formatDate(new Date(), 'YYYY-MM-DD')
-    this.getMonthlyAll({
+    this.fromDate = date.formatDate(date.startOfDate(new Date(), 'month'), 'DD/MM/YY ddd')
+    this.fromDateAPI = date.formatDate(date.startOfDate(new Date(), 'month'), 'YYYY-MM-DD')
+    this.endDate = date.formatDate(new Date(), 'DD/MM/YY ddd')
+    this.endDateAPI = date.formatDate(new Date(), 'YYYY-MM-DD')
+    this.getMonthlyList({
       pagination: this.pagination,
       filter: undefined
     })
   },
   methods: {
-    onFromDateChanged (date) {
-      this.getMonthlyAll({
+    checkPlatform () {
+      if (this.$q.platform.is.mobile) {
+        this.is_mobile = true
+      } else {
+        this.is_mobile = false
+      }
+    },
+    changeDateFormat (reportDate) {
+      let convertedDate = date.formatDate(date.addToDate(date.extractDate(reportDate, 'YYYY-MM-DD HH:mm:ss'), { hours: 5 }), 'DD-MM-YY dddd')
+      // let convertedDate = date.formatDate(date.extractDate(reportDate, 'YYYY-MM-DD HH:mm:ss'), 'DD-MM-YY ddd HH:mm')
+      return convertedDate
+    },
+    onFromDateChanged (fromdate) {
+      this.fromDateAPI = date.formatDate(date.extractDate(fromdate, 'DD/MM/YY ddd'), 'YYYY-MM-DD')
+      this.getMonthlyList({
         pagination: this.pagination,
         filter: undefined
       })
     },
-    onEndDateChanged (date) {
-      this.getMonthlyAll({
+    onEndDateChanged (enddate) {
+      this.endDateAPI = date.formatDate(date.extractDate(enddate, 'DD/MM/YY ddd'), 'YYYY-MM-DD')
+      this.getMonthlyList({
         pagination: this.pagination,
         filter: undefined
       })
@@ -382,7 +343,7 @@ export default {
       await this.getCourierList()
       await this.getExtraRoutes()
       if (data.is_group === 1) {
-        this.$router.push({ name: 'ReportDetail', params: { report_no: data.report_no } })
+        this.$router.push({ name: 'Edit Schedule', params: { report_no: data.report_no } })
       } else {
         this.isNewRecord = false
         this.filteredNames = this.couriers
@@ -395,7 +356,7 @@ export default {
       this.showDetail = true
     },
     addGroup () {
-      this.$router.push({ path: 'reports/new' })
+      this.$router.push('/dashboard/schedules/new')
     },
     cancelDetail () {
       this.showDetail = false
@@ -422,7 +383,7 @@ export default {
         console.log('error', error)
       }
       this.cancelDetail()
-      this.getMonthlyAll({
+      this.getMonthlyList({
         pagination: this.pagination,
         filter: this.filter
       })
@@ -436,7 +397,7 @@ export default {
         this.routes = res.data.data
       } catch (e) {
         Loading.hide()
-        // this.$router.push('/dashboard/reports')
+        // this.$router.push('/dashboard/schedules')
       }
     },
     getCourierList: async function () {
@@ -447,7 +408,7 @@ export default {
         this.couriers = res.data.data
       } catch (e) {
         Loading.hide()
-        // this.$router.push('/dashboard/reports')
+        // this.$router.push('/dashboard/schedules')
       }
     },
     // filterFn (val, update, abort) {
@@ -481,19 +442,70 @@ export default {
       })
     },
     // goToDetail (id) {
-    //   this.$router.push({ name: 'ReportDetail', params: { id: id } })
+    //   this.$router.push({ name: 'Edit Schedule', params: { id: id } })
     // },
-    getMonthlyAll: async function (props) {
-      let { page, rowsPerPage, sortBy, descending } = props.pagination
+    // getMonthlyAll: async function (props) {
+    //   let { page, rowsPerPage, sortBy, descending } = props.pagination
+    //   let filter = props.filter
+
+    //   const params = {
+    //     conditions: {
+    //     },
+    //     sortBy: sortBy,
+    //     descending: descending,
+    //     fromDate: this.fromDateAPI,
+    //     endDate: this.endDateAPI
+    //   }
+    //   if (filter) {
+    //     params.conditions.filter = filter
+    //   }
+
+    //   // fetch vehicleList from "server"
+    //   Loading.show()
+    //   try {
+    //     let res = await api.getMonthlyReportsAll(params)
+    //     Loading.hide()
+
+    //     // clear out existing vehicleList and add new
+    //     this.monthlyList = res.data.data
+    //     this.monthlyList.forEach((row, index) => {
+    //       row.index = index + 1
+    //     })
+
+    //     // update rowsCount with appropriate value
+    //     this.pagination.rowsNumber = res.data.totalCount
+
+    //     // don't forget to update local pagination object
+    //     this.pagination.page = page
+    //     this.pagination.rowsPerPage = rowsPerPage
+    //     this.pagination.sortBy = sortBy
+    //     this.pagination.descending = descending
+
+    //     // ...and turn of loading indicator
+    //   } catch (e) {
+    //     Loading.hide()
+    //     console.log('errorrrrrrrrrr', e)
+    //   }
+    // },
+    getMonthlyList: async function (props) {
+      let { page, rowsPerPage, rowsNumber, sortBy, descending } = props.pagination
       let filter = props.filter
+
+      // get all rows if "All" (0) is selected
+      let fetchCount = rowsPerPage === 0 ? rowsNumber : rowsPerPage
+
+      // calculate starting row of driverList
+      let startRow = (page - 1) * rowsPerPage
 
       const params = {
         conditions: {
         },
+        start: startRow,
+        numPerPage: fetchCount,
         sortBy: sortBy,
         descending: descending,
-        fromDate: this.fromDate,
-        endDate: this.endDate
+        fromDate: this.fromDateAPI,
+        endDate: this.endDateAPI
       }
       if (filter) {
         params.conditions.filter = filter
@@ -502,13 +514,13 @@ export default {
       // fetch vehicleList from "server"
       Loading.show()
       try {
-        let res = await api.getMonthlyReportsAll(params)
+        let res = await api.getMonthlyReports(params)
         Loading.hide()
 
         // clear out existing vehicleList and add new
         this.monthlyList = res.data.data
         this.monthlyList.forEach((row, index) => {
-          row.index = index + 1
+          row.index = (page - 1) * 10 + index + 1
         })
 
         // update rowsCount with appropriate value
@@ -549,7 +561,7 @@ export default {
             position: 'top',
             message: report.report_title + ' is removed successfully !'
           })
-          this.getReportList({
+          this.getMonthlyList({
             pagination: this.pagination,
             filter: undefined
           })
@@ -566,7 +578,7 @@ export default {
         this.monthlyList.map(row => this.columns.map(col => {
           if (col.field === 'is_group') {
             return wrapCsvValue(
-              row.is_group === 1 ? 'FD Routes' : 'Extra Routes',
+              row.is_group === 1 ? 'DAILY' : 'EXTRA',
               col.format
             )
           } else {

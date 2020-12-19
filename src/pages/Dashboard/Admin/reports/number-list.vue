@@ -1,8 +1,9 @@
 <template>
-  <q-page padding>
+  <q-page>
     <template>
-      <div class="q-pa-md">
+      <div>
         <q-table
+          :class="is_mobile?'my-sticky-dynamic table-top-mobile':'my-sticky-dynamic'"
           title="ROUTES"
           :data="routeList"
           :columns="columns"
@@ -14,26 +15,25 @@
         >
           <template v-slot:top-left>
             <div class="items-center">
-              <q-btn class="bg-white text-primary shadow-3 q-btn--push" @click="goToDetail()">
-                New ROUTE
-              </q-btn>
+              <q-btn rounded dense no-caps label="+Add Route" color="blue-7" style="width: 168px; height:40px;" @click="goToDetail()" />
             </div>
           </template>
           <template v-slot:top-right>
-            <q-input dense debounce="300" v-model="filter" placeholder="Search">
+            <q-input dense debounce="300" v-model="filter" placeholder="Search" input-class="text-white border-white" style="width: 168px;" color="blue-7" class="q-mb-sm">
               <template v-slot:append>
-                <q-icon name="search" />
+                <q-icon name="search" color="white" />
               </template>
             </q-input>
           </template>
 
           <template v-slot:body="props">
             <q-tr :props="props" @click.native="goToDetail(props.row)">
-              <!-- <q-td key="no" :props="props">{{ props.row.index }}</q-td> -->
+              <q-td key="no" :props="props">{{ props.row.index }}</q-td>
               <q-td key="route_number" :props="props">{{ props.row.route_number }}</q-td>
               <q-td key="route_type" :props="props">{{ !props.row.route_type ? 'Regular Route' : 'Extra Route' }}</q-td>
               <q-td key="buttons" :props="props">
                 <q-btn
+                  flat
                   :icon=" 'fas fa-trash-alt' "
                   @click.native.stop
                   @click="remove(props.row)"
@@ -41,18 +41,47 @@
               </q-td>
             </q-tr>
           </template>
+
+          <template v-slot:bottom="props">
+            <div class="col-12 row justify-end items-center">
+              Total Records: {{pagination.rowsNumber}}
+              <q-btn
+                icon="chevron_left"
+                color="grey-8"
+                round
+                dense
+                flat
+                :disable="props.isFirstPage"
+                @click="props.prevPage"
+              />
+              <span>{{props.pagination.page}} / {{Math.ceil(props.pagination.rowsNumber / props.pagination.rowsPerPage)}}</span>
+              <q-btn
+                icon="chevron_right"
+                color="grey-8"
+                round
+                dense
+                flat
+                :disable="props.isLastPage"
+                @click="props.nextPage"
+              />
+            </div>
+          </template>
         </q-table>
       </div>
       <q-dialog
         v-model="showDetail"
         persistent
+        :maximized="true"
         transition-show="scale"
         transition-hide="scale"
       >
-        <q-card>
-          <q-card-section>
-            <div class="text-h6">{{dialogTitle}}</div>
-          </q-card-section>
+        <q-card style="background-color: #3E444E">
+          <q-bar style="background-color: #3E444E">
+            <q-btn dense flat icon="close" color="white" v-close-popup>
+              <q-tooltip content-class="bg-white text-black">Close</q-tooltip>
+            </q-btn>
+            <div class="text-h6 text-white">{{dialogTitle}}</div>
+          </q-bar>
 
           <q-separator />
 
@@ -61,14 +90,17 @@
               @submit="onSubmit"
               ref="selectedNumber"
               :model="selectedNumber"
+              style="max-width: 400px; margin: auto;"
             >
               <div class="row justify-between q-col-gutter-md" >
                 <div class="col-12">
-                  <q-input outlined required label="Number" color="cyan-7" v-model="selectedNumber.route_number"></q-input>
-                </div>
-                <div class="col-12">
+                  <span class="text-white">Route</span>
+                  <q-input dense outlined required label="Number" v-model="selectedNumber.route_number" color="blue-7" bg-color="white" input-class="text-black text-center"></q-input>
+                  <q-separator class="q-my-md" color="grey-4" />
+                  <span class="text-white">Type</span>
                   <q-select
                     dense
+                    required
                     label="Route"
                     outlined
                     v-model="selectedNumber.route_type"
@@ -77,16 +109,33 @@
                     :option-label="opt => opt === null ? '- Null -' : opt.label"
                     emit-value
                     map-options
-                    color="cyan-7"
                     class="q-mb-xs"
                     behavior="menu"
+                    color="blue-7" bg-color="white" input-class="text-black text-center"
                   >
                   </q-select>
                 </div>
               </div>
-              <q-card-actions align="right">
-                <q-btn flat label="Cancel" color="primary" @click="cancelDetail"/>
-                <q-btn flat label="Save" color="primary"  type="submit" />
+              <q-card-actions align="center">
+                <q-btn
+                  no-caps
+                  dense
+                  rounded
+                  v-if="!isNewRecord"
+                  label="Delete"
+                  color="blue-7"
+                  @click="remove"
+                  style="width: 100px; height:40px;"
+                />
+                <q-btn
+                  :label="isNewRecord ? 'Add' : 'Update'"
+                  color="blue-7"
+                  no-caps
+                  dense
+                  rounded
+                  style="width: 100px; height:40px;"
+                  type="submit"
+                />
               </q-card-actions>
             </q-form>
           </q-card-section>
@@ -119,9 +168,9 @@ export default {
         { label: 'Extra Route', value: 1 }
       ],
       columns: [
-        // { name: 'no', required: true, label: 'No', align: 'left', field: 'no', sortable: true },
+        { name: 'no', required: true, label: 'NO', align: 'left', field: 'no' },
         { name: 'route_number', required: true, label: 'ROUTE', align: 'left', field: 'route_number', sortable: true },
-        { name: 'route_type', required: true, label: 'Type', align: 'center', field: 'route_type', sortable: true },
+        { name: 'route_type', required: true, label: 'TYPE', align: 'center', field: 'route_type', sortable: true },
         { name: 'buttons', label: '', field: 'buttons' }
       ],
       routeList: [],
@@ -129,10 +178,13 @@ export default {
         route_number: '',
         route_type: ''
       },
-      dialogTitle: ''
+      dialogTitle: '',
+      is_mobile: false,
+      isNewRecord: true
     }
   },
   mounted () {
+    this.checkPlatform()
     // get initial vehicleList from server (1st page)
     this.$store.commit('auth/pageTitle', this.$router.currentRoute.meta.title)
     this.getRoutes({
@@ -144,13 +196,22 @@ export default {
     // createNew () {
     //   this.$router.push({ name: 'NewNumber' })
     // },
+    checkPlatform () {
+      if (this.$q.platform.is.mobile) {
+        this.is_mobile = true
+      } else {
+        this.is_mobile = false
+      }
+    },
     goToDetail (data) {
       if (data) {
+        this.isNewRecord = false
         this.dialogTitle = 'Edit Route'
         this.selectedNumber.id = data.id
         this.selectedNumber.route_number = data.route_number
         this.selectedNumber.route_type = data.route_type
       } else {
+        this.isNewRecord = true
         this.dialogTitle = 'Add Route'
         this.selectedNumber = {
           route_number: '',
@@ -246,17 +307,18 @@ export default {
         filter: undefined
       })
     },
-    remove (number) {
+    remove () {
       // Confirm Remove Vehicle
       this.$q.dialog({
         title: 'Confirm',
-        message: 'Are you surely remove ' + number.route_number + '?',
+        message: 'Are you surely remove ' + this.selectedNumber.route_number + '?',
         cancel: true,
-        persistent: true
+        persistent: true,
+        color: 'blue-7'
       }).onOk(async () => {
         const params = {
           conditions: {
-            id: number.id
+            id: this.selectedNumber.id
           }
         }
         Loading.show()
@@ -267,8 +329,9 @@ export default {
           this.$q.notify({
             color: 'positive',
             position: 'top',
-            message: number.route_number + ' is removed successfully !'
+            message: this.selectedNumber.route_number + ' is removed successfully !'
           })
+          this.cancelDetail()
           this.getRoutes({
             pagination: this.pagination,
             filter: undefined

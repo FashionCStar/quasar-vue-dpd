@@ -1,12 +1,19 @@
 <template>
-  <q-page>
+  <q-page class="q-mt-none" style="background-color: #3E444E">
     <!-- content -->
 
-    <div class="bg-light-blue" style="width: 100%; height: 150px; position: absolute">
-    </div>
+    <!-- <div class="bg-light-blue" style="width: 100%; height: 150px; position: absolute">
+    </div> -->
     <template>
-      <div class="q-pa-md">
-        <template>
+      <div>
+        <q-bar style="background-color: #3E444E">
+          <q-btn dense flat icon="close" color="white" @click="$router.push('/dashboard/schedules')">
+          </q-btn>
+          <div class="text-h6 text-white">Edit Profile</div>
+        </q-bar>
+      </div>
+      <div class="q-pa-md" style="background-color: #3E444E">
+        <!-- <template>
           <div class="row items-center justify-between text-white" style="height: 150px; position: relative">
             <div class="items-center" style="font-size: 20px;">
               <q-btn
@@ -18,38 +25,66 @@
               <span>Dashboard</span>
             </div>
           </div>
-        </template>
+        </template> -->
         <q-form
           @submit="onSubmit"
           rounded
-          class="text-center q-gutter-y-md q-pa-md shadow-3"
+          class="text-center q-pa-md"
           ref="userForm"
           :model="userForm"
-          style="max-width: 600px; width:100%; border-radius: 10px; margin: auto"
+          style="max-width: 400px; width:100%; border-radius: 10px; margin: auto"
         >
-          <div class="row justify-between q-col-gutter-md" >
-            <div class="col-12">
-              <q-input outlined required label="First Name" color="cyan-7" v-model="userForm.first_name"></q-input>
-            </div>
-            <div class="col-12">
-              <q-input outlined required label="Last Name" color="cyan-7" v-model="userForm.last_name"></q-input>
-            </div>
-            <div class="col-12">
-              <q-input outlined required label="Username" color="cyan-7" v-model="userForm.name"></q-input>
-            </div>
-            <div class="col-12">
-              <q-input outlined required label="Email" type="email" color="cyan-7" v-model="userForm.email"></q-input>
-            </div>
-            <div class="col-12">
-              <q-input outlined required label="Mobile Phone" color="cyan-7" v-model="userForm.phone"></q-input>
-            </div>
-            <div class="col-12">
-              <q-input outlined required label="Zip Code" color="cyan-7" v-model="userForm.zipcode"></q-input>
-            </div>
-          </div>
-          <q-page-sticky position="bottom-right" :offset="[108, 18]">
+          <q-card style="background-color: #3E444E; box-shadow: none">
+            <q-card-section class="text-left q-pb-none">
+              <span class="text-white">First Name</span>
+              <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userForm.first_name"></q-input>
+            </q-card-section>
+            <q-card-section class="text-left q-py-none">
+              <span class="text-white">Last Name</span>
+              <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userForm.last_name"></q-input>
+            </q-card-section>
+            <q-card-section class="text-left q-py-none">
+              <span class="text-white">Username</span>
+              <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userForm.name"></q-input>
+            </q-card-section>
+            <q-card-section class="text-left q-py-none">
+              <span class="text-white">Email</span>
+              <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userForm.email"></q-input>
+            </q-card-section>
+            <q-card-section class="text-left q-py-none">
+              <span class="text-white">Mobile</span>
+              <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userForm.phone"></q-input>
+            </q-card-section>
+            <q-card-section class="text-left q-py-none">
+              <span class="text-white">ZipCode</span>
+              <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userForm.zipcode"></q-input>
+            </q-card-section>
+            <q-card-actions align="center">
+              <div class="q-px-md">
+                <q-btn
+                  no-caps
+                  dense
+                  rounded
+                  label="Logout"
+                  color="blue-7"
+                  @click="logout()"
+                  style="width: 100px; height:40px;"
+                /> &nbsp;
+                <q-btn
+                  color="blue-7"
+                  label="Update"
+                  no-caps
+                  dense
+                  rounded
+                  style="width: 100px; height:40px"
+                  type="submit"
+                />
+              </div>
+            </q-card-actions>
+          </q-card>
+          <!-- <q-page-sticky position="bottom-right" :offset="[108, 18]">
             <q-btn fab icon="save" color="purple-7" type="submit" />
-          </q-page-sticky>
+          </q-page-sticky> -->
         </q-form>
       </div>
     </template>
@@ -86,6 +121,11 @@ export default {
     this.getUserInfo()
   },
   methods: {
+    logout () {
+      this.$store.commit('auth/token', '')
+      this.$store.commit('auth/user', {})
+      this.$router.push('/login')
+    },
     getUserInfo: async function () {
       const params = {}
       Loading.show()
@@ -111,9 +151,9 @@ export default {
           textColor: 'white',
           message: 'User is updated successfully'
         })
-        this.$router.push('/dashboard')
+        this.$router.push('/dashboard/schedules')
       } catch (e) {
-        this.$router.push('/dashboard')
+        this.$router.push('/dashboard/schedules')
       }
     }
   }

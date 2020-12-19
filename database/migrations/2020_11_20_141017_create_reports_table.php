@@ -21,7 +21,7 @@ class CreateReportsTable extends Migration
             $table->string('report_title');
             $table->string('report_date');
             $table->string('report_no');
-            $table->tinyInteger('is_group')->default(1);
+            $table->tinyInteger('is_group')->default(0);
             $table->timestamp('created_at')->default(\DB::raw('CURRENT_TIMESTAMP'));
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

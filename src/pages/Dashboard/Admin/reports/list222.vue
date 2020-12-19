@@ -409,10 +409,10 @@ export default {
   },
   methods: {
     createNew () {
-      this.$router.push({ path: 'reports/new' })
+      this.$router.push('/dashboard/schedules/new')
     },
     // goToDetail (reportNo) {
-    //   this.$router.push({ name: 'ReportDetail', params: { report_no: reportNo } })
+    //   this.$router.push({ name: 'Edit Schedule', params: { report_no: reportNo } })
     // },
     showAddRecordDlg () {
       this.showAddDlg = true
@@ -477,7 +477,7 @@ export default {
       if (this.selectedOption === 'extra_route') {
         this.goToDetail()
       } else if (this.selectedOption === 'fd_routes') {
-        this.$router.push({ path: 'reports/new' })
+        this.$router.push('/dashboard/schedules/new')
       }
     },
     async goToDetail (data) {
@@ -485,7 +485,7 @@ export default {
       await this.getExtraRoutes()
       if (data) {
         if (data.is_group === 1) {
-          this.$router.push({ name: 'ReportDetail', params: { report_no: data.report_no } })
+          this.$router.push({ name: 'Edit Schedule', params: { report_no: data.report_no } })
         } else {
           this.isNewRecord = false
           this.filteredNames = this.couriers
@@ -529,7 +529,7 @@ export default {
           Loading.hide()
           console.log('error', error)
         }
-        this.$router.push('/dashboard/reports')
+        this.$router.push('/dashboard/schedules')
       } else {
         Loading.show()
         try {
@@ -540,7 +540,7 @@ export default {
           Loading.hide()
           console.log('error', error)
         }
-        // this.$router.push('/dashboard/reports')
+        // this.$router.push('/dashboard/schedules')
       }
       this.cancelDetail()
       this.hideAddRecordDlg()
@@ -558,7 +558,7 @@ export default {
         this.routes = res.data.data
       } catch (e) {
         Loading.hide()
-        // this.$router.push('/dashboard/reports')
+        // this.$router.push('/dashboard/schedules')
       }
     },
     getCourierList: async function () {
@@ -569,7 +569,7 @@ export default {
         this.couriers = res.data.data
       } catch (e) {
         Loading.hide()
-        // this.$router.push('/dashboard/reports')
+        // this.$router.push('/dashboard/schedules')
       }
     },
     filterFn (val, update, abort) {

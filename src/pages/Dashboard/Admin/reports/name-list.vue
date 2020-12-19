@@ -1,8 +1,9 @@
 <template>
-  <q-page padding>
+  <q-page>
     <template>
-      <div class="q-pa-md">
+      <div>
         <q-table
+          :class="is_mobile?'my-sticky-dynamic table-top-mobile':'my-sticky-dynamic'"
           title="COURIERS"
           :data="courierList"
           :columns="columns"
@@ -14,25 +15,24 @@
         >
           <template v-slot:top-left>
             <div class="items-center">
-              <q-btn class="bg-white text-primary shadow-3 q-btn--push" @click="goToDetail()">
-                New COURIER
-              </q-btn>
+              <q-btn rounded dense no-caps label="+Add Driver" color="blue-7" style="width: 168px; height:40px;" @click="goToDetail()" />
             </div>
           </template>
           <template v-slot:top-right>
-            <q-input dense debounce="300" v-model="filter" placeholder="Search">
+            <q-input dense debounce="300" v-model="filter" placeholder="Search" input-class="text-white border-white" style="width: 168px;" color="blue-7" class="q-mb-sm">
               <template v-slot:append>
-                <q-icon name="search" />
+                <q-icon name="search" color="white" />
               </template>
             </q-input>
           </template>
 
           <template v-slot:body="props">
             <q-tr :props="props" @click.native="goToDetail(props.row)">
-              <!-- <q-td key="no" :props="props">{{ props.row.index }}</q-td> -->
+              <q-td key="no" :props="props">{{ props.row.index }}</q-td>
               <q-td key="courier_name" :props="props">{{ props.row.courier_name }}</q-td>
               <q-td key="buttons" :props="props">
                 <q-btn
+                  flat
                   :icon=" 'fas fa-trash-alt' "
                   @click.native.stop
                   @click="remove(props.row)"
@@ -40,19 +40,47 @@
               </q-td>
             </q-tr>
           </template>
+
+          <template v-slot:bottom="props">
+            <div class="col-12 row justify-end items-center">
+              Total Records: {{pagination.rowsNumber}}
+              <q-btn
+                icon="chevron_left"
+                color="grey-8"
+                round
+                dense
+                flat
+                :disable="props.isFirstPage"
+                @click="props.prevPage"
+              />
+              <span>{{props.pagination.page}} / {{Math.ceil(props.pagination.rowsNumber / props.pagination.rowsPerPage)}}</span>
+              <q-btn
+                icon="chevron_right"
+                color="grey-8"
+                round
+                dense
+                flat
+                :disable="props.isLastPage"
+                @click="props.nextPage"
+              />
+            </div>
+          </template>
         </q-table>
       </div>
       <q-dialog
         v-model="showDetail"
         persistent
+        :maximized="true"
         transition-show="scale"
         transition-hide="scale"
       >
-        <q-card>
-          <q-card-section>
-            <div class="text-h6">{{dialogTitle}}</div>
-          </q-card-section>
-
+        <q-card style="background-color: #3E444E">
+          <q-bar style="background-color: #3E444E">
+            <q-btn dense flat icon="close" color="white" v-close-popup>
+              <q-tooltip content-class="bg-white text-black">Close</q-tooltip>
+            </q-btn>
+            <div class="text-h6 text-white">{{dialogTitle}}</div>
+          </q-bar>
           <q-separator />
 
           <q-card-section style="max-height: 50vh" class="scroll">
@@ -60,16 +88,35 @@
               @submit="onSubmit"
               ref="selectedName"
               :model="selectedName"
+              style="max-width: 400px; margin: auto;"
             >
               <div class="row justify-between q-col-gutter-md" >
                 <div class="col-12">
-                  <q-input outlined required label="Name" color="cyan-7" v-model="selectedName.courier_name"></q-input>
+                  <span class="text-white">Route</span>
+                  <q-input dense outlined required color="blue-7" bg-color="white" input-class="text-black text-center" v-model="selectedName.courier_name"></q-input>
                 </div>
               </div>
               <q-separator />
-              <q-card-actions align="right">
-                <q-btn flat label="Cancel" color="primary" @click="cancelDetail"/>
-                <q-btn flat label="Save" color="primary"  type="submit" />
+              <q-card-actions align="center">
+                <q-btn
+                  no-caps
+                  dense
+                  rounded
+                  v-if="!isNewRecord"
+                  label="Delete"
+                  color="blue-7"
+                  @click="remove"
+                  style="width: 100px; height:40px;"
+                />
+                <q-btn
+                  :label="isNewRecord ? 'Add' : 'Update'"
+                  color="blue-7"
+                  no-caps
+                  dense
+                  rounded
+                  style="width: 100px; height:40px;"
+                  type="submit"
+                />
               </q-card-actions>
             </q-form>
           </q-card-section>
@@ -98,7 +145,7 @@ export default {
         rowsNumber: 20
       },
       columns: [
-        // { name: 'no', required: true, label: 'No', align: 'left', field: 'no', sortable: true },
+        { name: 'no', required: true, label: 'NO', align: 'left', field: 'no' },
         { name: 'courier_name', required: true, label: 'COURIER', align: 'left', field: 'courier_name', sortable: true },
         { name: 'buttons', label: '', field: 'buttons' }
       ],
@@ -106,10 +153,13 @@ export default {
       selectedName: {
         courier_name: ''
       },
-      dialogTitle: ''
+      dialogTitle: '',
+      is_mobile: false,
+      isNewRecord: true
     }
   },
   mounted () {
+    this.checkPlatform()
     // get initial vehicleList from server (1st page)
     this.$store.commit('auth/pageTitle', this.$router.currentRoute.meta.title)
     this.getCouriers({
@@ -118,15 +168,24 @@ export default {
     })
   },
   methods: {
+    checkPlatform () {
+      if (this.$q.platform.is.mobile) {
+        this.is_mobile = true
+      } else {
+        this.is_mobile = false
+      }
+    },
     createNew () {
       this.$router.push({ name: 'NewName' })
     },
     goToDetail (data) {
       if (data) {
+        this.isNewRecord = false
         this.dialogTitle = 'Edit Name'
         this.selectedName.id = data.id
         this.selectedName.courier_name = data.courier_name
       } else {
+        this.isNewRecord = true
         this.dialogTitle = 'Add New Name'
         this.selectedName = {
           courier_name: ''
@@ -179,7 +238,6 @@ export default {
         // ...and turn of loading indicator
       } catch (e) {
         Loading.hide()
-        console.log('errorrrrrrrrrr', e)
       }
     },
     cancelDetail () {
@@ -227,7 +285,8 @@ export default {
         title: 'Confirm',
         message: 'Are you surely remove ' + name.courier_name + '?',
         cancel: true,
-        persistent: true
+        persistent: true,
+        color: 'blue-7'
       }).onOk(async () => {
         const params = {
           conditions: {

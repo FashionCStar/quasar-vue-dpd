@@ -6,7 +6,7 @@
       elevated
       class="toolbar-grad"
     >
-      <q-toolbar style="background-color: #272B33">
+      <q-toolbar style="background-color: #272B33; height: 62px">
         <q-btn
           flat
           dense
@@ -20,23 +20,31 @@
 
         <q-toolbar-title>{{pageTitle}}</q-toolbar-title>
         <div class="q-py-sm">
-          <q-btn-dropdown
+          <q-btn :to="{name: 'MyProfile'}"
+            class="q-px-xs"
+            text-color="white"
+            style="box-shadow: none;"
+          >
+            <q-avatar size="24px">
+              <img :src="require('../assets/images/icons/002-user.svg')">
+            </q-avatar>
+          </q-btn>
+          <!-- <q-btn-dropdown
             class="q-px-xs"
             text-color="white"
             style="box-shadow: none;"
           >
             <template v-slot:label>
               <div class="row items-center no-wrap">
-                <q-avatar size="50px;">
-                  <q-icon name="fas fa-user" />
+                <q-avatar>
+                  <q-icon>
+                    <img :src="require('../assets/images/icons/002-user.svg')">
+                  </q-icon>
                 </q-avatar>
-                <!-- <div class="text-center q-px-sm">
-                  {{user.first_name}}
-                </div> -->
               </div>
             </template>
             <q-list style="background-color: #272B33" class="text-white">
-              <q-item clickable v-close-popup :to="{name: 'MyProfile'}">
+              <q-item clickable v-close-popup >
                 <q-item-section avatar>
                   <q-avatar icon="far fa-user-circle" />
                 </q-item-section>
@@ -54,7 +62,7 @@
                 </q-item-section>
               </q-item>
             </q-list>
-          </q-btn-dropdown>
+          </q-btn-dropdown> -->
         </div>
         <!-- <div>Quasar v{{ $q.version }}</div> -->
         <!-- <q-btn
@@ -85,12 +93,11 @@
       <!-- TODO:: move drawer items to a separate file -->
       <q-list>
         <q-item
-          clickable
-          to="/dashboard"
           class="q-pa-none"
+          style="height: 62px; background-color: #272B33"
         >
           <q-item-section>
-            <q-img :src="require('../assets/images/dpd_logo.png')" style="width:100%; height:62px;"/>
+            <q-img :src="require('../assets/images/ukcourier_logo.svg')" class="q-mx-auto" style="width: 200px;"/>
           </q-item-section>
         </q-item>
         <q-separator />
@@ -98,7 +105,7 @@
       </q-list>
     </q-drawer>
 
-    <q-footer
+    <!-- <q-footer
       class="text-white"
       reveal
       v-if="false"
@@ -110,7 +117,7 @@
           </q-avatar>Title
         </q-toolbar-title>
       </q-toolbar>
-    </q-footer>
+    </q-footer> -->
 
     <q-page-container>
       <transition

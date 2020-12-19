@@ -3,15 +3,15 @@
     <div class="q-pa-md text-center" style="margin: auto">
       <q-form
         @submit="login"
-        class="text-center q-pa-md shadow-3 bg-white q-mx-auto"
-        style="max-width: 400px; border-radius: 10px; background-color: "
+        class="text-center q-pa-md q-mx-auto"
+        style="max-width: 400px; border-radius: 10px; background-color: #42424296"
       >
-        <div class="q-mt-md" >
-          <img :src="require('../../assets/images/logo_login.png')" style="max-height:80px; width: 100%" />
+        <div class="q-my-md" >
+          <img :src="require('../../assets/images/ukcourier_logo.svg')" style="max-height:60px; width: 100%" />
         </div>
         <div class="row justify-between q-col-gutter-md" >
           <div class="col-12">
-            <q-input outlined color="white" v-model="userData.email" clearable label="Email Address" class="q-ml-none bg-white">
+            <q-input outlined rounded borderless label-color="black" color="white" bg-color="white" v-model="userData.name" clearable placeholder="Username" class="q-ml-none">
               <template v-slot:prepend>
                 <q-icon name="account_circle" />
               </template>
@@ -20,13 +20,17 @@
           <div class="col-12">
             <base-text-field
               outlined
-              color="teal-10"
+              rounded
+              borderless
+              label-color="black"
+              color="white"
+              bg-color="white"
               v-model="userData.password"
               normalize-bottom
-              label="Password"
+              placeholder="Password"
               icon="mdi-card"
               clearable
-              class="q-ml-none"
+              class="q-ml-none q-pb-md"
               type="password"
               hide-show-password
             >
@@ -36,33 +40,16 @@
             </base-text-field>
           </div>
         </div>
-        <q-item class="q-mx-none q-px-none">
-          <!-- <q-item-section>
-            <q-checkbox v-model="remember" label="Remember me" color="teal" />
-          </q-item-section> -->
+        <!-- <q-item class="q-mx-none q-px-none">
           <q-item-section>
             <router-link to="/">
               Forgot your password?
             </router-link>
           </q-item-section>
-        </q-item>
-        <q-btn type="submit" class="full-width bg-cyan-7 text-white">
+        </q-item> -->
+        <q-btn type="submit" rounded color="blue-7" class="full-width text-white q-mb-md">
           Sign In
         </q-btn>
-        <!-- <div class="row">
-          <div class="col-5">
-            <q-linear-progress :value="0" size="1px" class="q-mt-sm" />
-          </div>
-          <div class="col-2 text-center">
-            <span>or</span>
-          </div>
-          <div class="col-5">
-            <q-linear-progress :value="0" size="1px" class="q-mt-sm" />
-          </div>
-        </div>
-        <q-btn class="full-width bg-orange-6 text-white" :to="{name: 'Signup'}">
-          Join XXXXXXXXXXXXX
-        </q-btn> -->
       </q-form>
     </div>
   </div>
@@ -84,7 +71,7 @@ export default {
   data () {
     return {
       userData: {
-        email: '',
+        name: '',
         password: ''
       },
       user: {},
@@ -112,7 +99,7 @@ export default {
         this.$store.commit('auth/user', res.data.user)
         let userType = res.data.user.user_type === '1' ? 'user' : 'admin'
         this.$store.commit('auth/userLevel', userType)
-        this.$router.push('/dashboard')
+        this.$router.push('/dashboard/schedules')
       } catch (error) {
         console.log('error', error)
         Loading.hide()

@@ -48,7 +48,7 @@ Route::group(['middleware' => 'auth:api'], function () {
   Route::post('/getReports', 'ReportController@getReports');
   Route::post('/getReportsAll', 'ReportController@getReportsAll');
   // Route::post('/getMonthlyReports', 'ReportController@getMonthlyReports');
-  Route::post('/getMonthlyReports', 'ReportController@getMonthlyAll');
+  Route::post('/getMonthlyReports', 'ReportController@getMonthlyReports');
   Route::post('/getMonthlyReportsAll', 'ReportController@getMonthlyAll');
   Route::post('/createReport', 'ReportController@createReport');
   Route::get('/getReportDetails', 'ReportController@getReportDetails');
@@ -56,5 +56,6 @@ Route::group(['middleware' => 'auth:api'], function () {
   Route::post('/removeReport', 'ReportController@removeReport');
   Route::post('/createSingleRecord', 'ReportController@createSingleRecord');
   Route::post('/updateSingleRecord', 'ReportController@updateSingleRecord');
+  Route::post('/removeSingleRecord', 'ReportController@removeSingleRecord');
   Route::get('/getRNCID', 'ReportController@getRNCID');
 });

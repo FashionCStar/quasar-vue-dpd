@@ -3,39 +3,35 @@
     <template>
       <div>
         <q-table
-          class="my-sticky-dynamic"
+          :class="is_mobile?'my-sticky-dynamic table-top-mobile':'my-sticky-dynamic'"
           :data="reportList"
           :columns="columns"
           row-key="report_date"
           :filter="filter"
-          @request="getReportsAll"
+          @request="getReportList"
           binary-state-sort
-          virtual-scroll
-          :virtual-scroll-item-size="48"
-          :virtual-scroll-sticky-size-start="48"
           :pagination.sync="pagination"
-          :rows-per-page-options="[0]"
         >
           <template v-slot:top>
             <div class="col-6 row justify-start">
-              <q-input dense debounce="300" v-model="filter" placeholder="Search" input-class="text-white border-white" style="width: 120px;" color="blue-7" class="q-mb-md">
+              <!-- <q-input dense debounce="300" v-model="filter" placeholder="Search" input-class="text-white border-white" style="width: 168px;" color="blue-7" class="q-mb-sm">
                 <template v-slot:append>
                   <q-icon name="search" color="white" />
                 </template>
               </q-input>
-              &nbsp;
+              &nbsp; -->
               <q-btn
                 color="blue-7"
-                label="Add Record"
+                label="+Add Record"
                 no-caps
                 dense
+                rounded
                 @click="showAddRecordDlg"
-                class="q-mb-md"
-                style="width: 120px; height:40px;"
+                style="width: 168px; height:40px;"
               />
             </div>
             <div class="col-6 row justify-end">
-              <q-input dense v-model="fromDate" style="width:120px;" input-class="text-white" color="blue-7" class="q-mb-md">
+              <q-input dense v-model="fromDate" style="width:168px;" input-class="text-white" color="blue-7" class="q-mb-sm">
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer" color="white">
                     <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
@@ -44,14 +40,13 @@
                         @input="onFromDateChanged"
                         mask="DD/MM/YY ddd"
                         color="blue-7"
-                        v-close-popup
                       >
                       </q-date>
                     </q-popup-proxy>
                   </q-icon>
                 </template>
               </q-input>
-              <q-input dense v-model="endDate" style="width:120px;" input-class="text-white" class="q-ml-xs q-mb-md" color="blue-7">
+              <q-input dense v-model="endDate" style="width:168px;" input-class="text-white" class="q-ml-xs q-mb-sm" color="blue-7">
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer" color="white">
                     <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
@@ -60,7 +55,6 @@
                         @input="onEndDateChanged"
                         mask="DD/MM/YY ddd"
                         color="blue-7"
-                        v-close-popup
                       >
                       </q-date>
                     </q-popup-proxy>
@@ -72,13 +66,14 @@
 
           <template v-slot:body="props">
             <q-tr :props="props" @click.native="goToDetail(props.row)">
-              <!-- <q-td key="no" :props="props">{{ props.row.index }}</q-td> -->
-              <q-td key="report_date" :props="props">{{ props.row.report_date }}</q-td>
-              <q-td key="is_group" :props="props">{{ props.row.is_group === 1 ? 'FD Routes' : 'Extra Routes' }}</q-td>
+              <q-td key="no" :props="props">{{ props.row.index }}</q-td>
+              <q-td key="created_at" :props="props">{{ changeDateFormat(props.row.created_at) }}</q-td>
+              <q-td key="is_group" :props="props">{{ props.row.is_group === 1 ? 'DAILY' : 'EXTRA' }}</q-td>
               <q-td key="user_name" :props="props">{{ props.row.user.name }}</q-td>
               <q-td key="buttons" :props="props">
                 <q-btn
                   rounded
+                  flat
                   :icon=" 'fas fa-pen-alt' "
                   @click.native.stop
                   @click="goToDetail(props.row)"
@@ -93,20 +88,42 @@
             </q-tr>
           </template>
 
-          <template v-slot:bottom>
-            <div class="col-6 row">
-              Total Records: {{pagination.rowsNumber}}
-            </div>
-            <div class="col-6 row justify-end">
-              <q-btn
-                label="Export"
-                color="blue-7"
-                no-caps
-                dense
-                @click="exportTable"
-                class="q-mr-xs q-mt-xs"
-                style="width: 100px; height:30px;"
-              />
+          <template v-slot:bottom="props">
+            <div class="col-12 row justify-between">
+              <div class="q-my-auto">
+                <q-btn
+                  label="Export"
+                  no-caps
+                  dense
+                  rounded
+                  outline
+                  @click="exportTable"
+                  class="q-ma-none"
+                  style="width: 60px; height:30px;"
+                />
+              </div>
+              <div class="row justify-end items-center">
+                Total Records: {{pagination.rowsNumber}}
+                <q-btn
+                  icon="chevron_left"
+                  color="grey-8"
+                  round
+                  dense
+                  flat
+                  :disable="props.isFirstPage"
+                  @click="props.prevPage"
+                />
+                <span>{{props.pagination.page}} / {{Math.ceil(props.pagination.rowsNumber / props.pagination.rowsPerPage)}}</span>
+                <q-btn
+                  icon="chevron_right"
+                  color="grey-8"
+                  round
+                  dense
+                  flat
+                  :disable="props.isLastPage"
+                  @click="props.nextPage"
+                />
+              </div>
             </div>
           </template>
         </q-table>
@@ -119,11 +136,13 @@
         transition-hide="scale"
       >
         <q-card style="background-color: #3E444E">
-          <q-bar>
+          <q-bar style="background-color: #3E444E">
             <q-btn dense flat icon="close" color="white" v-close-popup>
-              <q-tooltip content-class="bg-white text-primary">Close</q-tooltip>
+              <q-tooltip content-class="bg-white text-black">Close</q-tooltip>
             </q-btn>
           </q-bar>
+
+          <q-separator />
 
           <div class="layout-center">
             <q-card-section>
@@ -165,9 +184,9 @@
         transition-hide="scale"
       >
         <q-card style="background-color: #3E444E">
-          <q-bar>
+          <q-bar style="background-color: #3E444E">
             <q-btn dense flat icon="close" color="white" v-close-popup>
-              <q-tooltip content-class="bg-white text-primary">Close</q-tooltip>
+              <q-tooltip content-class="bg-white text-black">Close</q-tooltip>
             </q-btn>
             <div class="text-h6 text-white">{{dialogTitle}}</div>
           </q-bar>
@@ -193,7 +212,6 @@
                             @input="onReportDateChanged"
                             mask="DD/MM/YY ddd"
                             color="blue-7"
-                            v-close-popup
                           >
                           </q-date>
                         </q-popup-proxy>
@@ -230,9 +248,6 @@
                     required
                     outlined
                     v-model="selectedRecord.route_id"
-                    use-input
-                    hide-selected
-                    fill-input
                     :options="routes"
                     :option-value="opt => opt === null ? null : opt.id"
                     :option-label="opt => opt === null ? '- Null -' : opt.route_number"
@@ -250,14 +265,22 @@
               </div>
               <q-card-actions align="center">
                 <!-- <q-btn flat label="Cancel" color="primary" @click="cancelDetail"/> -->
-                <!-- <q-btn flat label="Save" color="primary"  type="submit" /> -->
+                <q-btn
+                  no-caps
+                  dense
+                  rounded
+                  v-if="!isNewRecord"
+                  label="Delete"
+                  color="blue-7"
+                  @click="remove"
+                  style="width: 100px; height:40px;"
+                />
                 <q-btn
                   :label="isNewRecord ? 'Add' : 'Update'"
                   color="blue-7"
                   no-caps
                   dense
                   rounded
-                  class="q-mt-xs"
                   style="width: 100px; height:40px;"
                   type="submit"
                 />
@@ -281,32 +304,6 @@
   transform: translateY(-50%) translateX(-50%);
   padding-left: 25px;
   padding-right: 25px;
-
-.my-sticky-dynamic
-  /* height or max-height is important */
-  height: calc(100vh - 62px)
-
-  .q-table__top,
-  .q-table__bottom
-    background-color: #3E444E
-    color: white
-    border-radius: 0px !important;
-
-  thead tr:first-child th /* bg color is important for th; just specify one */
-    background-color: #272B33
-    color: white
-
-  thead tr th
-    position: sticky
-    z-index: 1
-  /* this will be the loading indicator */
-  thead tr:last-child th
-    /* height of all previous header rows */
-    top: 48px
-  thead tr:first-child th
-    top: 0
-.q-field--standard .q-field__control:before, .q-field--standard .q-field__control:hover:before
-  border-color: white
 
 </style>
 
@@ -343,10 +340,10 @@ export default {
       ],
       selectedOption: '',
       pagination: {
-        sortBy: 'report_date',
+        sortBy: 'created_at',
         descending: true,
         page: 1,
-        rowsPerPage: 0,
+        rowsPerPage: 10,
         rowsNumber: 20
       },
       fromDate: '',
@@ -354,8 +351,8 @@ export default {
       endDate: '',
       endDateAPI: '',
       columns: [
-        // { name: 'no', required: true, label: 'No', align: 'left', field: 'no', sortable: true },
-        { name: 'report_date', required: true, label: 'DATE', align: 'left', field: 'report_date' },
+        { name: 'no', required: true, label: 'NO', align: 'left', field: 'no' },
+        { name: 'created_at', required: true, label: 'DATE', align: 'left', field: 'created_at' },
         { name: 'is_group', required: true, label: 'TYPE', align: 'left', field: 'is_group' },
         { name: 'user_name', required: true, label: 'USER', align: 'left', field: 'user_name' },
         { name: 'buttons', label: '', field: 'buttons' }
@@ -373,30 +370,40 @@ export default {
       dialogTitle: '',
       routes: [],
       couriers: [],
-      filteredNames: []
+      filteredNames: [],
+      is_mobile: false,
+      rnc_id: ''
     }
   },
   mounted () {
     // get initial vehicleList from server (1st page)
+    this.checkPlatform()
     this.$store.commit('auth/pageTitle', this.$router.currentRoute.meta.title)
-    this.fromDate = date.formatDate(new Date(), 'DD/MM/YY ddd')
-    this.fromDateAPI = date.formatDate(new Date(), 'YYYY-MM-DD')
+    this.fromDate = date.formatDate(date.startOfDate(new Date(), 'month'), 'DD/MM/YY ddd')
+    this.fromDateAPI = date.formatDate(date.startOfDate(new Date(), 'month'), 'YYYY-MM-DD')
     this.endDate = date.formatDate(new Date(), 'DD/MM/YY ddd')
     this.endDateAPI = date.formatDate(new Date(), 'YYYY-MM-DD')
-    // this.fromDate = new Date()
-    // this.endDate = new Date()
-    this.getReportsAll({
+    this.getReportList({
       pagination: this.pagination,
       filter: undefined
     })
   },
   methods: {
     createNew () {
-      this.$router.push({ path: 'reports/new' })
+      this.$router.push('/dashboard/schedules/new')
     },
-    // goToDetail (reportNo) {
-    //   this.$router.push({ name: 'ReportDetail', params: { report_no: reportNo } })
-    // },
+    checkPlatform () {
+      if (this.$q.platform.is.mobile) {
+        this.is_mobile = true
+      } else {
+        this.is_mobile = false
+      }
+    },
+    changeDateFormat (reportDate) {
+      let convertedDate = date.formatDate(date.addToDate(date.extractDate(reportDate, 'YYYY-MM-DD HH:mm:ss'), { hours: 5 }), 'DD-MM-YY ddd HH:mm')
+      // let convertedDate = date.formatDate(date.extractDate(reportDate, 'YYYY-MM-DD HH:mm:ss'), 'DD-MM-YY ddd HH:mm')
+      return convertedDate
+    },
     showAddRecordDlg () {
       this.showAddDlg = true
     },
@@ -410,14 +417,14 @@ export default {
     onFromDateChanged (fromdate) {
       // this.fromDate = date.formatDate(fromdate, 'YYYY-MM-DD')
       this.fromDateAPI = date.formatDate(date.extractDate(fromdate, 'DD/MM/YY ddd'), 'YYYY-MM-DD')
-      this.getReportsAll({
+      this.getReportList({
         pagination: this.pagination,
         filter: undefined
       })
     },
     onEndDateChanged (enddate) {
       this.endDateAPI = date.formatDate(date.extractDate(enddate, 'DD/MM/YY ddd'), 'YYYY-MM-DD')
-      this.getReportsAll({
+      this.getReportList({
         pagination: this.pagination,
         filter: undefined
       })
@@ -428,7 +435,7 @@ export default {
         this.reportList.map(row => this.columns.map(col => {
           if (col.field === 'is_group') {
             return wrapCsvValue(
-              row.is_group === 1 ? 'FD Routes' : 'Extra Routes',
+              row.is_group === 1 ? 'DAILY' : 'EXTRA',
               col.format
             )
           }
@@ -466,15 +473,16 @@ export default {
       if (this.selectedOption === 'extra_route') {
         this.goToDetail()
       } else if (this.selectedOption === 'fd_routes') {
-        this.$router.push({ path: 'reports/new' })
+        this.$router.push('/dashboard/schedules/new')
       }
     },
     async goToDetail (data) {
+      await this.getRNCID()
       await this.getCourierList()
       await this.getExtraRoutes()
       if (data) {
         if (data.is_group === 1) {
-          this.$router.push({ name: 'ReportDetail', params: { report_no: data.report_no } })
+          this.$router.push({ name: 'Edit Schedule', params: { report_no: data.report_no } })
         } else {
           this.isNewRecord = false
           this.filteredNames = this.couriers
@@ -497,12 +505,28 @@ export default {
     },
     cancelDetail () {
       this.showDetail = false
-      this.selectedRecord = {}
+      this.selectedRecord = {
+        id: '',
+        report_date: '',
+        report_title: '',
+        courier_id: '',
+        route_id: ''
+      }
+    },
+    getRNCID: async function () {
+      Loading.show()
+      try {
+        let res = await api.getRNCID()
+        Loading.hide()
+        this.rnc_id = res.data.data
+      } catch (e) {
+        Loading.hide()
+      }
     },
     async onSubmit () {
-      this.selectedRecord.report_date = date.formatDate(date.addToDate(this.selectedRecord.report_date, { days: 1 }), 'YYYY-MM-DD')
+      this.selectedRecord.report_date = date.formatDate(date.extractDate(this.reportDate, 'DD/MM/YY ddd'), 'YYYY-MM-DD')
       if (!this.selectedRecord.courier_id) {
-        this.selectedRecord.courier_id = 'RNC'
+        this.selectedRecord.courier_id = this.rnc_id
       }
       const params = {
         data: this.selectedRecord
@@ -520,7 +544,7 @@ export default {
           Loading.hide()
           console.log('error', error)
         }
-        this.$router.push('/dashboard/reports')
+        this.$router.push('/dashboard/schedules')
       } else {
         Loading.show()
         try {
@@ -531,11 +555,10 @@ export default {
           Loading.hide()
           console.log('error', error)
         }
-        // this.$router.push('/dashboard/reports')
       }
       this.cancelDetail()
       this.hideAddRecordDlg()
-      this.getReportsAll({
+      this.getReportList({
         pagination: this.pagination,
         filter: this.filter
       })
@@ -549,7 +572,7 @@ export default {
         this.routes = res.data.data
       } catch (e) {
         Loading.hide()
-        // this.$router.push('/dashboard/reports')
+        // this.$router.push('/dashboard/schedules')
       }
     },
     getCourierList: async function () {
@@ -560,7 +583,7 @@ export default {
         this.couriers = res.data.data
       } catch (e) {
         Loading.hide()
-        // this.$router.push('/dashboard/reports')
+        // this.$router.push('/dashboard/schedules')
       }
     },
     filterFn (val, update, abort) {
@@ -585,67 +608,16 @@ export default {
         }
       })
     },
-    getReportsAll: async function (props) {
-      let { page, rowsPerPage, sortBy, descending } = props.pagination
-      let filter = props.filter
-
-      const params = {
-        conditions: {},
-        sortBy: sortBy,
-        descending: descending,
-        fromDate: this.fromDateAPI,
-        endDate: this.endDateAPI
-      }
-      if (filter) {
-        params.conditions.filter = filter
-      }
-
-      // fetch vehicleList from "server"
-      Loading.show()
-      try {
-        let res = await api.getReportsAll(params)
-        Loading.hide()
-
-        // clear out existing vehicleList and add new
-        this.reportList = res.data.data
-        this.reportList.forEach((row, index) => {
-          row.index = index + 1
-        })
-
-        // update rowsCount with appropriate value
-        this.pagination.rowsNumber = res.data.totalCount
-
-        // don't forget to update local pagination object
-        this.pagination.page = page
-        this.pagination.rowsPerPage = rowsPerPage
-        this.pagination.sortBy = sortBy
-        this.pagination.descending = descending
-
-        // ...and turn of loading indicator
-      } catch (e) {
-        Loading.hide()
-      }
-    },
-    // getReportList: async function (props) {
-    //   // this.fromDate = date.formatDate(date.addToDate(this.fromDate, { days: 1 }), 'YYYY-MM-DD')
-    //   // this.endDate = date.formatDate(date.addToDate(this.endDate, { days: 1 }), 'YYYY-MM-DD')
-    //   let { page, rowsPerPage, rowsNumber, sortBy, descending } = props.pagination
+    // getReportsAll: async function (props) {
+    //   let { page, rowsPerPage, sortBy, descending } = props.pagination
     //   let filter = props.filter
-
-    //   // get all rows if "All" (0) is selected
-    //   let fetchCount = rowsPerPage === 0 ? rowsNumber : rowsPerPage
-
-    //   // calculate starting row of driverList
-    //   let startRow = (page - 1) * rowsPerPage
 
     //   const params = {
     //     conditions: {},
-    //     start: startRow,
-    //     numPerPage: fetchCount,
     //     sortBy: sortBy,
     //     descending: descending,
-    //     fromDate: this.fromDate,
-    //     endDate: this.endDate
+    //     fromDate: this.fromDateAPI,
+    //     endDate: this.endDateAPI
     //   }
     //   if (filter) {
     //     params.conditions.filter = filter
@@ -654,7 +626,7 @@ export default {
     //   // fetch vehicleList from "server"
     //   Loading.show()
     //   try {
-    //     let res = await api.getReports(params)
+    //     let res = await api.getReportsAll(params)
     //     Loading.hide()
 
     //     // clear out existing vehicleList and add new
@@ -677,30 +649,83 @@ export default {
     //     Loading.hide()
     //   }
     // },
-    remove (report) {
+
+    getReportList: async function (props) {
+      let { page, rowsPerPage, rowsNumber, sortBy, descending } = props.pagination
+      let filter = props.filter
+
+      // get all rows if "All" (0) is selected
+      let fetchCount = rowsPerPage === 0 ? rowsNumber : rowsPerPage
+
+      // calculate starting row of driverList
+      let startRow = (page - 1) * rowsPerPage
+
+      const params = {
+        conditions: {},
+        start: startRow,
+        numPerPage: fetchCount,
+        sortBy: sortBy,
+        descending: descending,
+        fromDate: this.fromDateAPI,
+        endDate: this.endDateAPI
+      }
+      if (filter) {
+        params.conditions.filter = filter
+      }
+
+      // fetch vehicleList from "server"
+      Loading.show()
+      try {
+        let res = await api.getReports(params)
+        Loading.hide()
+
+        // clear out existing vehicleList and add new
+        this.reportList = res.data.data
+        this.reportList.forEach((row, index) => {
+          row.index = (page - 1) * 10 + index + 1
+        })
+
+        // update rowsCount with appropriate value
+        this.pagination.rowsNumber = res.data.totalCount
+
+        // don't forget to update local pagination object
+        this.pagination.page = page
+        this.pagination.rowsPerPage = rowsPerPage
+        this.pagination.sortBy = sortBy
+        this.pagination.descending = descending
+
+        // ...and turn of loading indicator
+      } catch (e) {
+        Loading.hide()
+      }
+    },
+    remove () {
       // Confirm Remove Vehicle
       this.$q.dialog({
         title: 'Confirm',
-        message: 'Are you surely remove ' + report.report_title + '?',
+        message: 'Are you surely remove this report?',
         cancel: true,
-        persistent: true
+        persistent: true,
+        color: 'blue-7'
       }).onOk(async () => {
         const params = {
           conditions: {
-            report_no: report.report_no
+            id: this.selectedRecord.id
           }
         }
         Loading.show()
         try {
-          let res = await api.removeReport(params)
+          let res = await api.removeSingleRecord(params)
           Loading.hide()
           console.log('remove result', res)
           this.$q.notify({
             color: 'positive',
             position: 'top',
-            message: report.report_title + ' is removed successfully !'
+            message: 'Report is removed successfully !'
           })
-          this.getReportsAll({
+          this.cancelDetail()
+          this.hideAddRecordDlg()
+          this.getReportList({
             pagination: this.pagination,
             filter: undefined
           })

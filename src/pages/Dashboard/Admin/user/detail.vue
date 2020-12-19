@@ -1,11 +1,11 @@
 <template>
-  <q-page padding>
+  <q-page class="q-mt-none" style="background-color: #3E444E">
     <!-- content -->
-    <div class="bg-light-blue" style="width: 100%; height: 150px; position: absolute">
-    </div>
+    <!-- <div class="bg-light-blue" style="width: 100%; height: 150px; position: absolute">
+    </div> -->
     <template>
-      <div class="q-pa-md">
-        <template>
+      <div>
+        <!-- <template>
           <div class="row items-center justify-between text-white" style="height: 150px; position: relative">
             <div class="items-center" style="font-size: 20px;">
               <q-btn
@@ -17,90 +17,128 @@
               <span>{{isNewPage ? 'New User' : 'User Detail'}}</span>
             </div>
           </div>
-        </template>
-        <q-form
-          @submit="onSubmit"
-          class="text-center q-pa-md shadow-3 q-mx-auto"
-          style="max-width: 700px; border-radius: 10px;"
-        >
-          <div class="row justify-between q-col-gutter-md" >
-            <!--<div class="col-12 row items-center justify-center">-->
-              <!--<q-uploader-->
-                <!--color="teal"-->
-                <!--flat-->
-                <!--bordered-->
-                <!--accept=".jpg, .png, image/*"-->
-                <!--ref="uploader"-->
-                <!--auto-expand-->
-                <!--label="Upload Avatar"-->
-                <!--hide-upload-btn-->
-                <!--@added="addAvatar"-->
-              <!--/>-->
-            <!--</div>-->
-            <div class="col-12 col-sm-6">
-              <q-input outlined dense required label="First Name" color="cyan-7" v-model="user.first_name"></q-input>
-            </div>
-            <div class="col-12 col-sm-6">
-              <q-input outlined dense required label="Last Name" color="cyan-7" v-model="user.last_name"></q-input>
-            </div>
-            <div class="col-12 col-sm-6">
-              <q-input outlined dense required label="Username" color="cyan-7" v-model="user.name"></q-input>
-            </div>
-            <div class="col-12 col-sm-6">
-              <q-input outlined dense required label="Email" type="email" color="cyan-7" v-model="user.email"></q-input>
-            </div>
-            <div class="col-12 col-sm-6">
-              <q-input outlined dense required label="Mobile Phone" color="cyan-7" v-model="user.phone"></q-input>
-            </div>
-            <div class="col-12 col-sm-6">
-              <q-input outlined dense required label="Zip Code" color="cyan-7" v-model="user.zipcode"></q-input>
-            </div>
-            <div class="col-12 col-sm-6">
-              <base-text-field
-                outlined
-                required
-                dense
-                color="cyan-7"
-                v-model="user.password"
-                normalize-bottom
-                label="Password"
-                icon="mdi-card"
-                clearable
-                class="q-ml-none"
-                type="password"
-                hide-show-password
-              >
-                <template v-slot:prepend>
-                  <q-icon name="mdi-account-key" />
-                </template>
-              </base-text-field>
-            </div>
-            <div class="col-12 col-sm-6">
-              <base-text-field
-                outlined
-                required
-                dense
-                color="cyan-7"
-                v-model="user.confirmPassword"
-                normalize-bottom
-                label="Confirm Password"
-                icon="mdi-card"
-                clearable
-                class="q-ml-none"
-                type="password"
-                :rules="[val => val === user.password  || 'Password is not match']"
-                hide-show-password
-              >
-                <template v-slot:prepend>
-                  <q-icon name="mdi-account-key" />
-                </template>
-              </base-text-field>
-            </div>
-            <div class="col-12">
-              <q-btn :label="isNewPage ? 'Add New' : 'Update'" type="submit" color="pink-8" class="q-btn--push" style="width:200px; height:50px;"/>
-            </div>
-          </div>
-        </q-form>
+        </template> -->
+        <div>
+          <q-bar style="background-color: #3E444E">
+            <q-btn dense flat icon="close" color="white" @click="$router.push('/dashboard/users')">
+            </q-btn>
+            <div class="text-h6 text-white">{{isNewPage ? 'Add User' : 'Edit User'}}</div>
+          </q-bar>
+        </div>
+        <div class="q-px-md" style="background-color: #3E444E">
+          <q-form
+            @submit="onSubmit"
+            :model="user"
+            ref="userForm"
+            class="text-center q-px-md"
+            style="max-width: 400px; width:100%; margin: auto;"
+          >
+            <q-card style="background-color: #3E444E; box-shadow: none">
+              <!--<div class="col-12 row items-center justify-center">-->
+                <!--<q-uploader-->
+                  <!--color="teal"-->
+                  <!--flat-->
+                  <!--bordered-->
+                  <!--accept=".jpg, .png, image/*"-->
+                  <!--ref="uploader"-->
+                  <!--auto-expand-->
+                  <!--label="Upload Avatar"-->
+                  <!--hide-upload-btn-->
+                  <!--@added="addAvatar"-->
+                <!--/>-->
+              <!--</div>-->
+              <q-card-section class="text-left q-pb-none">
+                <span class="text-white">First Name</span>
+                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="user.first_name"></q-input>
+              </q-card-section>
+              <q-card-section class="text-left q-py-none">
+                <span class="text-white">Last Name</span>
+                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="user.last_name"></q-input>
+              </q-card-section>
+              <q-card-section class="text-left q-py-none">
+                <span class="text-white">Username</span>
+                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="user.name"></q-input>
+              </q-card-section>
+              <q-card-section class="text-left q-py-none">
+                <span class="text-white">Email</span>
+                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="user.email"></q-input>
+              </q-card-section>
+              <q-card-section class="text-left q-py-none">
+                <span class="text-white">Mobile</span>
+                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="user.phone"></q-input>
+              </q-card-section>
+              <q-card-section class="text-left q-py-none">
+                <span class="text-white">ZipCode</span>
+                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="user.zipcode"></q-input>
+              </q-card-section>
+              <q-card-section class="text-left q-py-none">
+                <span class="text-white">Password</span>
+                <base-text-field
+                  dense
+                  outlined
+                  required
+                  bg-color="white"
+                  color="blue-7"
+                  class="q-pb-md"
+                  normalize-bottom
+                  icon="mdi-card"
+                  clearable
+                  type="password"
+                  hide-show-password
+                  v-model="user.password"
+                >
+                  <template v-slot:prepend>
+                    <q-icon name="mdi-account-key" />
+                  </template>
+                </base-text-field>
+              </q-card-section>
+              <q-card-section class="text-left q-py-none">
+                <span class="text-white">Confirm</span>
+                <base-text-field
+                  dense
+                  outlined
+                  required
+                  bg-color="white"
+                  color="blue-7"
+                  class="q-pb-md"
+                  v-model="user.confirmPassword"
+                  normalize-bottom
+                  icon="mdi-card"
+                  clearable
+                  type="password"
+                  :rules="[val => val === user.password  || 'Password is not match']"
+                  hide-show-password
+                >
+                  <template v-slot:prepend>
+                    <q-icon name="mdi-account-key" />
+                  </template>
+                </base-text-field>
+              </q-card-section>
+              <q-card-actions align="center">
+                <div class="q-px-md">
+                  <!-- <q-btn
+                    no-caps
+                    dense
+                    rounded
+                    label="Delete"
+                    color="blue-7"
+                    @click="remove()"
+                    style="width: 100px; height:40px;"
+                  /> &nbsp; -->
+                  <q-btn
+                    color="blue-7"
+                    :label="isNewPage ? 'Add New' : 'Update'"
+                    no-caps
+                    dense
+                    rounded
+                    style="width: 100px; height:40px"
+                    type="submit"
+                  />
+                </div>
+              </q-card-actions>
+            </q-card>
+          </q-form>
+        </div>
       </div>
     </template>
   </q-page>

@@ -9,7 +9,7 @@
     >
       <q-item-section avatar>
         <q-icon>
-          <img width="40px" :src="require('../../assets/images/icons/users_icon.png')">
+          <img width="22px" :src="require('../../assets/images/icons/001-group.svg')">
         </q-icon>
       </q-item-section>
       <q-item-section>
@@ -19,16 +19,16 @@
     <q-separator v-if="userLevel==='admin'" color="white"/>
     <q-item
       clickable
-      to="/dashboard/reports"
+      to="/dashboard/schedules"
       active-class="router--active"
     >
       <q-item-section avatar>
         <q-icon>
-          <img width="40px" :src="require('../../assets/images/icons/schedule_icon.png')">
+          <img width="22px" :src="require('../../assets/images/icons/003-calendar.svg')">
         </q-icon>
       </q-item-section>
       <q-item-section class="text-white">
-        <q-item-label>Schedule</q-item-label>
+        <q-item-label>SCHEDULE</q-item-label>
       </q-item-section>
     </q-item>
     <q-separator color="white"/>
@@ -39,11 +39,11 @@
     >
       <q-item-section avatar>
         <q-icon>
-          <img width="40px" :src="require('../../assets/images/icons/performance_ico.png')">
+          <img width="22px" :src="require('../../assets/images/icons/004-graphic.svg')">
         </q-icon>
       </q-item-section>
       <q-item-section class="text-white">
-        <q-item-label>Performance</q-item-label>
+        <q-item-label>PERFORMANCE</q-item-label>
       </q-item-section>
     </q-item>
     <q-separator color="white"/>
@@ -54,11 +54,11 @@
     >
       <q-item-section avatar>
         <q-icon>
-          <img width="40px" :src="require('../../assets/images/icons/driver_icon.png')">
+          <img width="25px" :src="require('../../assets/images/icons/005-driving.svg')">
         </q-icon>
       </q-item-section>
       <q-item-section class="text-white">
-        <q-item-label>Drivers</q-item-label>
+        <q-item-label>DRIVERS</q-item-label>
       </q-item-section>
     </q-item>
     <q-separator color="white"/>
@@ -69,11 +69,11 @@
     >
       <q-item-section avatar>
         <q-icon>
-          <img width="40px" :src="require('../../assets/images/icons/routes_icon.png')">
+          <img width="25px" :src="require('../../assets/images/icons/006-way.svg')">
         </q-icon>
       </q-item-section>
       <q-item-section class="text-white">
-        <q-item-label>Routes</q-item-label>
+        <q-item-label>ROUTES</q-item-label>
       </q-item-section>
     </q-item>
   </div>

@@ -1,8 +1,9 @@
 <template>
-  <q-page padding>
+  <q-page>
     <template>
-      <div class="q-pa-md">
+      <div>
         <q-table
+          :class="is_mobile?'my-sticky-dynamic table-top-mobile':'my-sticky-dynamic'"
           title="Users"
           :data="userList"
           :columns="columns"
@@ -12,7 +13,7 @@
           @request="getUsers"
           binary-state-sort
         >
-          <template v-slot:top-right>
+          <!-- <template v-slot:top-right>
             <q-input dense debounce="300" v-model="filter" placeholder="Search">
               <template v-slot:append>
                 <q-icon name="search" />
@@ -23,6 +24,18 @@
                 New User
               </q-btn>
             </div>
+          </template> -->
+          <template v-slot:top-left>
+            <div class="items-center">
+              <q-btn rounded dense no-caps label="+Add User" color="blue-7" style="width: 168px; height:40px;" @click="createNew()" />
+            </div>
+          </template>
+          <template v-slot:top-right>
+            <q-input dense debounce="300" v-model="filter" placeholder="Search" input-class="text-white border-white" style="width: 168px;" color="blue-7">
+              <template v-slot:append>
+                <q-icon name="search" color="white" />
+              </template>
+            </q-input>
           </template>
 
           <template v-slot:body="props">
@@ -35,6 +48,7 @@
               <q-td key="zipcode" :props="props">{{ props.row.zipcode }}</q-td>
               <q-td key="buttons" :props="props">
                 <q-btn
+                  flat
                   :icon=" 'fas fa-trash-alt' "
                   @click.native.stop
                   @click="remove(props.row)"
@@ -42,11 +56,66 @@
               </q-td>
             </q-tr>
           </template>
+          <template v-slot:bottom="props">
+            <div class="col-12 row justify-end items-center">
+              Total Records: {{props.pagination.rowsNumber}}
+              <q-btn
+                icon="chevron_left"
+                color="grey-8"
+                round
+                dense
+                flat
+                :disable="props.isFirstPage"
+                @click="props.prevPage"
+              />
+              <span>{{props.pagination.page}} / {{Math.ceil(props.pagination.rowsNumber / props.pagination.rowsPerPage)}}</span>
+              <q-btn
+                icon="chevron_right"
+                color="grey-8"
+                round
+                dense
+                flat
+                :disable="props.isLastPage"
+                @click="props.nextPage"
+              />
+            </div>
+          </template>
         </q-table>
       </div>
     </template>
   </q-page>
 </template>
+
+<style lang="stylus">
+.my-sticky-dynamic
+  /* height or max-height is important */
+  height: calc(100vh - 62px)
+
+  .q-table__top,
+  .q-table__bottom
+    background-color: #3E444E
+    color: white
+    border-radius: 0px !important
+
+  thead tr:first-child th /* bg color is important for th; just specify one */
+    background-color: #272B33
+    color: white
+
+  thead tr th
+    position: sticky
+    z-index: 1
+  /* this will be the loading indicator */
+  thead tr:last-child th
+    /* height of all previous header rows */
+    top: 48px
+  thead tr:first-child th
+    top: 0
+
+.table-top-mobile
+  height: calc(100vh - 170px) !important
+  .q-table__top
+    height: 104px !important
+</style>
 
 <script>
 
@@ -75,11 +144,13 @@ export default {
         { name: 'zipcode', required: true, label: 'Zipcode', align: 'center', field: 'zipcode', sortable: true },
         { name: 'buttons', label: '', field: 'buttons' }
       ],
-      userList: []
+      userList: [],
+      is_mobile: false
     }
   },
   mounted () {
     // get initial vehicleList from server (1st page)
+    this.checkPlatform()
     this.$store.commit('auth/pageTitle', this.$router.currentRoute.meta.title)
     this.getUsers({
       pagination: this.pagination,
@@ -87,6 +158,13 @@ export default {
     })
   },
   methods: {
+    checkPlatform () {
+      if (this.$q.platform.is.mobile) {
+        this.is_mobile = true
+      } else {
+        this.is_mobile = false
+      }
+    },
     createNew () {
       this.$router.push({ name: 'New User' })
     },

@@ -17,7 +17,7 @@ module.exports = function (ctx) {
       'custom-input'
     ],
 
-    css: ['app.sass'],
+    css: ['app.sass', 'quasar.variables.sass'],
     extras: [
       'roboto-font',
       'material-icons', // optional, you are not bound to it

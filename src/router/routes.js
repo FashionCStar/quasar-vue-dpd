@@ -112,8 +112,8 @@ const routes = [
             component: () => import('pages/Dashboard/Admin/user/detail.vue')
           },
           {
-            path: 'reports',
-            name: 'Reports',
+            path: 'schedules',
+            name: 'Schedules',
             meta: {
               title: 'SCHEDULE',
               roles: ['admin', 'user']
@@ -121,18 +121,18 @@ const routes = [
             component: () => import('pages/Dashboard/Admin/reports/list.vue')
           },
           {
-            path: 'reports/new',
-            name: 'New Report',
-            component: () => import('pages/Dashboard/Admin/reports/detail.vue'),
+            path: 'schedules/new',
+            name: 'New Schedule',
+            component: () => import('pages/Dashboard/Admin/reports/create-report.vue'),
             meta: {
               title: 'Create New Schedule',
               roles: ['admin', 'user']
             }
           },
           {
-            path: 'reports/:report_no/detail',
-            name: 'ReportDetail',
-            component: () => import('pages/Dashboard/Admin/reports/detail.vue'),
+            path: 'schedules/:report_no/detail',
+            name: 'Edit Schedule',
+            component: () => import('pages/Dashboard/Admin/reports/edit-report.vue'),
             meta: {
               title: 'Schedule Detail',
               roles: ['admin', 'user']

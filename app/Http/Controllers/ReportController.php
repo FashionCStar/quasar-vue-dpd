@@ -11,6 +11,7 @@ use App\Report;
 use App\Courier;
 use App\Route;
 use Illuminate\Support\Facades\Auth;
+use Mockery\Undefined;
 
 class ReportController extends Controller
 {
@@ -18,10 +19,16 @@ class ReportController extends Controller
   public function getRNCID(Request $request) {
     if (Auth::user()) {
       $user_id = Auth::user()->id;
-      $rnc = Courier::firstOrNew(['courier_name' => 'RNC']);
-      $rnc->user_id = $user_id;
-      $rnc->save();
-      return response()->json(['success' => 'success', 'data'=>$rnc->id], 200, [], JSON_NUMERIC_CHECK);
+      $rnc = Courier::whereUserId($user_id)->where('courier_name', 'RNC')->where('deleted_date', NULL)->get();
+      if (count($rnc)) {
+        return response()->json(['success' => 'success', 'data'=>$rnc[0]->id], 200, [], JSON_NUMERIC_CHECK);
+      } else {
+        $rnc = new Courier;
+        $rnc->courier_name = 'RNC';
+        $rnc->user_id = $user_id;
+        $rnc->save();
+        return response()->json(['success' => 'success', 'data'=>$rnc->id], 200, [], JSON_NUMERIC_CHECK); 
+      }
     }
   }
   public function createSingleRecord (Request $request) {
@@ -32,13 +39,18 @@ class ReportController extends Controller
         $lastReportNo = count(Report::whereUserId($user_id)->where('report_date', $reportInfo['report_date'])->select('report_no')->groupBy('report_no')->orderBy('report_no', 'DESC')->get());
         $report_no = $reportInfo['report_date'] . '-' . ($lastReportNo+1);
 
-        $rnc = Courier::firstOrNew(['courier_name' => 'RNC']);
-        $rnc->user_id = $user_id;
-        $rnc->save();
+        // $rnc = Courier::whereUserId($user_id)->where('courier_name', 'RNC')->get();
+        // if (!count($rnc)) {
+        //   $rnc = new Courier;
+        //   $rnc->courier_name = 'RNC';
+        //   $rnc->user_id = $user_id;
+        //   $rnc->save();
+        // }
         
         $report = new Report;
         $report->user_id = $user_id;
-        $report->courier_id = $reportInfo['courier_id']=='RNC' ? $rnc->id : $reportInfo['courier_id'];
+        // $report->courier_id = $reportInfo['courier_id']=='RNC' ? $rnc->id : $reportInfo['courier_id'];
+        $report->courier_id = $reportInfo['courier_id'];
         $report->route_id = $reportInfo['route_id'];
         // $report->report_title = $reportInfo['report_title'] ? $reportInfo['report_title'] : '';
         $report->report_date = $reportInfo['report_date'];
@@ -78,6 +90,19 @@ class ReportController extends Controller
       return response()->json(['failed'=>'failed'], 401);
     }
   }
+  public function removeSingleRecord (Request $request) {
+    if (Auth::user()) {
+      $user_id = Auth::user()->id;
+      try {
+        Report::whereUserId($user_id)->where('id', $request['conditions']['id'])->delete();
+        return response()->json(['success' => 'Single Record Successfully Removed'], 200, [], JSON_NUMERIC_CHECK);
+      } catch (\Exception $e) {
+        return response()->json(['error' => 'Single Record Remove Failed'], 500);
+      }
+    } else {
+      return response()->json(['failed'=>'failed'], 401);
+    }
+  }
   public function createReport (Request $request) {
     if (Auth::user()) {
       $reportInfo = $request['data'];
@@ -85,19 +110,22 @@ class ReportController extends Controller
       try {
         $lastReport = Report::whereUserId($user_id)->where('report_date', $reportInfo['report_date'])->where('is_group', 1)->get();
         if (count($lastReport)) {
-          return response()->json(['message' => `Today's Report is already created`], 500);
+          return response()->json(['message' => "Today's Report is already created"], 500);
         } else {
           $lastReportNo = count(Report::whereUserId($user_id)->where('report_date', $reportInfo['report_date'])->select('report_no')->groupBy('report_no')->orderBy('report_no', 'DESC')->get());
           $report_no = $reportInfo['report_date'] . '-' . ($lastReportNo+1);
 
-          $rnc = Courier::firstOrNew(['courier_name' => 'RNC']);
-          $rnc->user_id = $user_id;
-          $rnc->save();
-          
+          // $rnc = Courier::whereUserId($user_id)->where('courier_name', 'RNC')->get();
+          // if (!count($rnc)) {
+          //   $rnc = new Courier;
+          //   $rnc->courier_name = 'RNC';
+          //   $rnc->user_id = $user_id;
+          //   $rnc->save();
+          // }
           foreach($reportInfo['report_data'] as $data) {
             $report = new Report;
             $report->user_id = $user_id;
-            $report->courier_id = $data['courier_id']=='RNC' ? $rnc->id : $data['courier_id'];
+            $report->courier_id = $data['courier_id'];
             $report->route_id = $data['route_id'];
             // $report->report_title = $reportInfo['report_title']?$reportInfo['report_title']:'';
             $report->report_date = $reportInfo['report_date'];
@@ -122,9 +150,13 @@ class ReportController extends Controller
       $reportInfo = $request['data'];
       $reportNo = $request['conditions']['report_no'];
       try {
-        $rnc = Courier::firstOrNew(['courier_name' => 'RNC']);
-        $rnc->user_id = $user_id;
-        $rnc->save();
+        // $rnc = Courier::whereUserId($user_id)->where('courier_name', 'RNC')->get();
+        // if (!count($rnc)) {
+        //   $rnc = new Courier;
+        //   $rnc->courier_name = 'RNC';
+        //   $rnc->user_id = $user_id;
+        //   $rnc->save();
+        // }
         
         foreach ($reportInfo['report_data'] as $data) {
           if (array_key_exists('id', $data)) {
@@ -133,7 +165,8 @@ class ReportController extends Controller
             $report = new Report;
           }
           $report->user_id = $reportInfo['user_id'];
-          $report->courier_id = $data['courier_id']=='RNC' ? $rnc->id : $data['courier_id'];
+          // $report->courier_id = $data['courier_id']=='RNC' ? $rnc->id : $data['courier_id'];
+          $report->courier_id = $data['courier_id'];
           $report->route_id = $data['route_id'];
           $report->report_date = $reportInfo['report_date'];
           // $report->report_title = $reportInfo['report_title']?$reportInfo['report_title']:'';
@@ -169,9 +202,9 @@ class ReportController extends Controller
     if (Auth::user()) {
       $user = Auth::user();
       if ($user->user_type == '0') {
-        $routes = Route::where('route_type', 0)->where()->get();
+        $routes = Route::where('route_type', 0)->where('deleted_date', NULL)->get();
       } else {
-        $routes = Route::whereUserId($user->id)->where('route_type', 0)->get();
+        $routes = Route::whereUserId($user->id)->where('route_type', 0)->where('deleted_date', NULL)->get();
       }
       return response()->json(['success'=>'success', 'data' => $routes], 200, [], JSON_NUMERIC_CHECK);
     } else {
@@ -194,11 +227,13 @@ class ReportController extends Controller
 
   public function getCourierAll(Request $request) {
     if (Auth::user()) {
+      $report_datetime = Input::get('report_datetime');
+      if (!isset($$report_datetime)) $report_datetime = date('Y-m-d h:i:s');
       $user = Auth::user();
       if ($user->user_type == '0') {
-        $couriers = Courier::all();
+        $couriers = Courier::where('deleted_date', NULL)->orWhere('deleted_date', '>', $report_datetime)->get();
       } else {
-        $couriers = Courier::whereUserId($user->id)->get();
+        $couriers = Courier::whereUserId($user->id)->where('deleted_date', NULL)->orWhere('deleted_date', '>', $report_datetime)->get();
       }
       return response()->json(['success'=>'success', 'data' => $couriers], 200, [], JSON_NUMERIC_CHECK);
     } else {
@@ -226,27 +261,28 @@ class ReportController extends Controller
       $user = Auth::user();
       $start = $request['start'] ? $request['start'] : 0;
       $numPerPage = $request['numPerPage'] ? $request['numPerPage'] : 10;
-      $sortBy = $request['sortBy'] ? $request['sortBy'] : 'report_date';
+      $sortBy = $request['sortBy'] ? 'reports.'.$request['sortBy'] : 'reports.created_at';
       $desc = $request['descending'] ? 'DESC' : 'ASC';
       $fromDate = $request['fromDate'];
       $endDate = $request['endDate'];
       
       if ($request['conditions'] && $request['conditions']['filter']) {
         $search = $request['conditions']['filter'];
-        if ($user->user_type == '0') {
+        if ($user->user_type == 0) {
           $totalCount = count(Report::where('report_date', 'like', '%' . $search . '%')->where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->select(['report_no'])->groupBy('report_no')->get());
-          $reports = Report::with(['user'])->where('report_date', 'like', '%' . $search . '%')->where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->select(['id', 'report_date', 'report_no', 'user_id', 'courier_id', 'route_id', 'is_group'])->groupBy('report_no')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+          $reports = Report::with(['user'])->where('report_date', 'like', '%' . $search . '%')->where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->select(['id', 'report_date', 'report_no', 'user_id', 'courier_id', 'route_id', 'is_group', 'created_at'])->groupBy('report_no')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
         } else {
           $totalCount = count(Report::whereUserId($user->id)->where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->where('report_date', 'like', '%' . $search . '%')->select(['report_no'])->groupBy('report_no')->get());
-          $reports = Report::with(['user'])->whereUserId($user->id)->where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->where('report_date', 'like', '%' . $search . '%')->select(['id', 'report_date', 'report_no', 'user_id', 'courier_id', 'route_id', 'is_group'])->groupBy('report_no')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+          $reports = Report::with(['user'])->whereUserId($user->id)->where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->where('report_date', 'like', '%' . $search . '%')->select(['id', 'report_date', 'report_no', 'user_id', 'courier_id', 'route_id', 'is_group', 'created_at'])->groupBy('report_no')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
         }
       } else {
-        if ($user->user_type == '0') {
+        if ($user->user_type == 0) {
           $totalCount = count(Report::where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->select(['report_no'])->groupBy('report_no')->get());
-          $reports = Report::with(['user'])->where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->select(['id', 'report_date', 'report_no', 'user_id', 'courier_id', 'route_id', 'is_group'])->groupBy('report_no')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+          // print_r($totalCount); exit;
+          $reports = Report::with(['user'])->where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->select(['id', 'report_date', 'report_no', 'user_id', 'courier_id', 'route_id', 'is_group', 'created_at'])->groupBy('report_no')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
         } else {
           $totalCount = count(Report::whereUserId($user->id)->where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->select(['report_no'])->groupBy('report_no')->get());
-          $reports = Report::with(['user'])->whereUserId($user->id)->where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->select(['id', 'report_date', 'report_no', 'user_id', 'courier_id', 'route_id', 'is_group'])->groupBy('report_no')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+          $reports = Report::with(['user'])->whereUserId($user->id)->where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate)->select(['id', 'report_date', 'report_no', 'user_id', 'courier_id', 'route_id', 'is_group', 'created_at'])->groupBy('report_no')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
         }
       }
       if ($totalCount == 0) {
@@ -361,7 +397,7 @@ class ReportController extends Controller
       $user = Auth::user();
       $start = $request['start'] ? $request['start'] : 0;
       $numPerPage = $request['numPerPage'] ? $request['numPerPage'] : 10;
-      $sortBy = $request['sortBy'] ? $request['sortBy'] : 'report_date';
+      $sortBy = $request['sortBy'] ? 'reports.'.$request['sortBy'] : 'reports.created_at';
       $desc = $request['descending'] ? 'DESC' : 'ASC';
       $fromDate = $request['fromDate'];
       $endDate = $request['endDate'];
@@ -375,12 +411,12 @@ class ReportController extends Controller
             $q->orWhere('courier_name', 'like', '%' . $search . '%')
               ->orWhere('route_number', 'like', '%' . $search . '%');
           })->get());
-          $reports = Report::leftJoin('couriers', 'couriers.id', '=', 'reports.courier_id')->leftJoin('routes', 'routes.id', '=', 'reports.route_id')->where('reports.report_date', '>=', $fromDate)->where('reports.report_date', '<=', $endDate)
+          $reports = Report::with(['user'])->leftJoin('couriers', 'couriers.id', '=', 'reports.courier_id')->leftJoin('routes', 'routes.id', '=', 'reports.route_id')->where('reports.report_date', '>=', $fromDate)->where('reports.report_date', '<=', $endDate)
           ->where(function($q) use ($search) {
             // $q->where('report_title', 'like', '%' . $search . '%')
             $q->orWhere('courier_name', 'like', '%' . $search . '%')
               ->orWhere('route_number', 'like', '%' . $search . '%');
-          })->select('reports.id', 'reports.courier_id', 'reports.route_id', 'reports.report_title', 'reports.report_date', 'reports.report_no', 'couriers.courier_name', 'routes.route_number', 'is_group')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+          })->select('reports.id', 'reports.courier_id', 'reports.route_id', 'reports.report_title', 'reports.report_date', 'reports.report_no', 'couriers.courier_name', 'routes.route_number', 'is_group', 'reports.created_at', 'reports.user_id')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
         } else {
           $totalCount = count(Report::leftJoin('couriers', 'couriers.id', '=', 'reports.courier_id')->leftJoin('routes', 'routes.id', '=', 'reports.route_id')->where('reports.user_id', $user->id)->where('reports.report_date', '>=', $fromDate)->where('reports.report_date', '<=', $endDate)
           ->where(function($q) use ($search) {
@@ -388,20 +424,20 @@ class ReportController extends Controller
             $q->orWhere('courier_name', 'like', '%' . $search . '%')
               ->orWhere('route_number', 'like', '%' . $search . '%');
           })->get());
-          $reports = Report::leftJoin('couriers', 'couriers.id', '=', 'reports.courier_id')->leftJoin('routes', 'routes.id', '=', 'reports.route_id')->where('reports.user_id', $user->id)->where('reports.report_date', '>=', $fromDate)->where('reports.report_date', '<=', $endDate)
+          $reports = Report::with(['user'])->leftJoin('couriers', 'couriers.id', '=', 'reports.courier_id')->leftJoin('routes', 'routes.id', '=', 'reports.route_id')->where('reports.user_id', $user->id)->where('reports.report_date', '>=', $fromDate)->where('reports.report_date', '<=', $endDate)
           ->where(function($q) use ($search) {
             // $q->where('report_title', 'like', '%' . $search . '%')
             $q->orWhere('courier_name', 'like', '%' . $search . '%')
               ->orWhere('route_number', 'like', '%' . $search . '%');
-          })->select('reports.id', 'reports.courier_id', 'reports.route_id', 'reports.report_title', 'reports.report_date', 'reports.report_no', 'couriers.courier_name', 'routes.route_number', 'is_group')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+          })->select('reports.id', 'reports.courier_id', 'reports.route_id', 'reports.report_title', 'reports.report_date', 'reports.report_no', 'couriers.courier_name', 'routes.route_number', 'is_group', 'reports.created_at', 'reports.user_id')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
         }
       } else {
         if ($user->user_type == '0') {
           $totalCount = count(Report::leftJoin('couriers', 'couriers.id', '=', 'reports.courier_id')->leftJoin('routes', 'routes.id', '=', 'reports.route_id')->where('reports.report_date', '>=', $fromDate)->where('reports.report_date', '<=', $endDate)->get());
-          $reports = Report::with(['user'])->leftJoin('couriers', 'couriers.id', '=', 'reports.courier_id')->leftJoin('routes', 'routes.id', '=', 'reports.route_id')->where('reports.report_date', '>=', $fromDate)->where('reports.report_date', '<=', $endDate)->select('reports.id', 'reports.user_id', 'reports.courier_id', 'reports.route_id', 'reports.report_title', 'reports.report_date', 'reports.report_no', 'couriers.courier_name', 'routes.route_number', 'is_group')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+          $reports = Report::with(['user'])->leftJoin('couriers', 'couriers.id', '=', 'reports.courier_id')->leftJoin('routes', 'routes.id', '=', 'reports.route_id')->where('reports.report_date', '>=', $fromDate)->where('reports.report_date', '<=', $endDate)->select('reports.id', 'reports.user_id', 'reports.courier_id', 'reports.route_id', 'reports.report_title', 'reports.report_date', 'reports.report_no', 'couriers.courier_name', 'routes.route_number', 'is_group', 'reports.created_at', 'reports.user_id')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
         } else {
           $totalCount = count(Report::leftJoin('couriers', 'couriers.id', '=', 'reports.courier_id')->leftJoin('routes', 'routes.id', '=', 'reports.route_id')->where('reports.report_date', '>=', $fromDate)->where('reports.report_date', '<=', $endDate)->get());
-          $reports = Report::with(['user'])->leftJoin('couriers', 'couriers.id', '=', 'reports.courier_id')->leftJoin('routes', 'routes.id', '=', 'reports.route_id')->where('reports.report_date', '>=', $fromDate)->where('reports.report_date', '<=', $endDate)->select('reports.id', 'reports.user_id', 'reports.courier_id', 'reports.route_id', 'reports.report_title', 'reports.report_date', 'reports.report_no', 'couriers.courier_name', 'routes.route_number', 'is_group')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+          $reports = Report::with(['user'])->leftJoin('couriers', 'couriers.id', '=', 'reports.courier_id')->leftJoin('routes', 'routes.id', '=', 'reports.route_id')->where('reports.report_date', '>=', $fromDate)->where('reports.report_date', '<=', $endDate)->select('reports.id', 'reports.user_id', 'reports.courier_id', 'reports.route_id', 'reports.report_title', 'reports.report_date', 'reports.report_no', 'couriers.courier_name', 'routes.route_number', 'is_group', 'reports.created_at', 'reports.user_id')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
         }
       }
       if ($totalCount == 0) {
@@ -425,19 +461,19 @@ class ReportController extends Controller
       if ($request['conditions'] && $request['conditions']['filter']) {
         $search = $request['conditions']['filter'];
         if ($user->user_type == '0') {
-          $totalCount = count(Courier::where('courier_name', 'like', '%' . $search . '%')->where('deleted_date', NULL)->get());
-          $couriers = Courier::with(['user'])->where('courier_name', 'like', '%' . $search . '%')->where('deleted_date', NULL)->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+          $totalCount = count(Courier::where('courier_name', 'like', '%' . $search . '%')->where('deleted_date', NULL)->where('courier_name', '<>', 'RNC')->get());
+          $couriers = Courier::with(['user'])->where('courier_name', 'like', '%' . $search . '%')->where('deleted_date', NULL)->where('courier_name', '<>', 'RNC')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
         } else {
-          $totalCount = count(Courier::whereUserId($user->id)->where('courier_name', 'like', '%' . $search . '%')->where('deleted_date', NULL)->get());
-          $couriers = Courier::whereUserId($user->id)->where('courier_name', 'like', '%' . $search . '%')->where('deleted_date', NULL)->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+          $totalCount = count(Courier::whereUserId($user->id)->where('courier_name', 'like', '%' . $search . '%')->where('deleted_date', NULL)->where('courier_name', '<>', 'RNC')->get());
+          $couriers = Courier::whereUserId($user->id)->where('courier_name', 'like', '%' . $search . '%')->where('deleted_date', NULL)->where('courier_name', '<>', 'RNC')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
         }
       } else {
         if ($user->user_type == '0') {
-          $totalCount = count(Courier::where('deleted_date', NULL)->get());
-          $couriers = Courier::with(['user'])->where('deleted_date', NULL)->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+          $totalCount = count(Courier::where('deleted_date', NULL)->where('courier_name', '<>', 'RNC')->get());
+          $couriers = Courier::with(['user'])->where('deleted_date', NULL)->where('courier_name', '<>', 'RNC')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
         } else {
-          $totalCount = count(Courier::whereUserId($user->id)->where('deleted_date', NULL)->get());
-          $couriers = Courier::whereUserId($user->id)->where('deleted_date', NULL)->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+          $totalCount = count(Courier::whereUserId($user->id)->where('deleted_date', NULL)->where('courier_name', '<>', 'RNC')->get());
+          $couriers = Courier::whereUserId($user->id)->where('deleted_date', NULL)->where('courier_name', '<>', 'RNC')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
         }
       }
       if ($totalCount == 0) {
@@ -454,13 +490,18 @@ class ReportController extends Controller
       $user_id = Auth::user()->id;
       $courierInfo = $request['data'];
       try {
-        $courier = new Courier;
-        $courier->courier_name = $courierInfo['courier_name'];
-        $courier->user_id = $user_id;
-        $courier->save();
-        return response()->json(['success' => 'success', 'data' => $courier], 200, [], JSON_NUMERIC_CHECK);
+        $existing_courier = Courier::whereUserId($user_id)->where('courier_name', $courierInfo['courier_name'])->where('deleted_date', NULL)->get();
+        if (count($existing_courier)) {
+          return response()->json(['message' => 'Courier already exists'], 409);
+        } else {
+          $courier = new Courier;
+          $courier->courier_name = $courierInfo['courier_name'];
+          $courier->user_id = $user_id;
+          $courier->save();
+          return response()->json(['success' => 'success', 'data' => $courier], 200, [], JSON_NUMERIC_CHECK);
+        }
       } catch (\Exception $e) {
-        return response()->json(['message' => 'Report updating is failed', 'error' => $e], 500);
+        return response()->json(['message' => 'Cant add Courier', 'error' => $e], 500);
       }
     } else {
       return response()->json(['failed'=>'failed'], 401);
@@ -489,7 +530,7 @@ class ReportController extends Controller
       $courierID = $request['conditions']['id'];
       try {
         $courier = Courier::find($courierID);
-        $courier->deleted_date = date("Y-m-d");
+        $courier->deleted_date = date("Y-m-d h:i:s");
         $courier->save();
         return response()->json(['success' => 'Report Successfully Removed']);
       } catch (\Exception $e) {
@@ -540,7 +581,7 @@ class ReportController extends Controller
       $user_id = Auth::user()->id;
       $routeInfo = $request['data'];
       try {
-        $route = Route::whereUserId($user_id)->where('route_number', $routeInfo['route_number'])->where('route_type', $routeInfo['route_type'])->get();
+        $route = Route::whereUserId($user_id)->where('route_number', $routeInfo['route_number'])->where('route_type', $routeInfo['route_type'])->where('deleted_date', NULL)->get();
         if (count($route)) {
           return response()->json(['message' => 'Route already exists'], 409);
         } else {
@@ -581,7 +622,7 @@ class ReportController extends Controller
       $routeID = $request['conditions']['id'];
       try {
         $route = Route::find($routeID);
-        $route->deleted_date = date("Y-m-d");
+        $route->deleted_date = date("Y-m-d h:i:s");
         $route->save();
         return response()->json(['success' => 'Route Successfully Removed']);
       } catch (\Exception $e) {
