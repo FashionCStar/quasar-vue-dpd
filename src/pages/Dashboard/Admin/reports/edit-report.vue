@@ -170,7 +170,6 @@ export default {
   name: 'EditSchedule',
   data: function () {
     return {
-      isNewPage: true,
       showEmptyDlg: false,
       reportDate: '',
       reportForm: {
@@ -201,7 +200,6 @@ export default {
   methods: {
     isNew () {
       if (this.$router.currentRoute.params.report_no !== null && this.$router.currentRoute.params.report_no !== undefined && this.$router.currentRoute.params.report_no !== '') {
-        // this.isNewPage = false
         this.reportForm.report_no = this.$router.currentRoute.params.report_no
       }
     },
@@ -233,25 +231,6 @@ export default {
         this.$router.push('/dashboard/schedules')
       }
     },
-    // getRegularRoutes: async function () {
-    //   Loading.show()
-    //   try {
-    //     let res = await api.getRegularRoutes()
-    //     Loading.hide()
-    //     this.routes = res.data.data
-    //     this.routes.forEach((route, index) => {
-    //       let reportData = this.reportForm.report_data.filter(data => {
-    //         return data.route_id === route.id
-    //       })
-    //       if (!reportData.length) {
-    //         this.reportForm.report_data.push({ courier_id: '', route_id: route.id, route_number: route.route_number })
-    //       }
-    //     })
-    //   } catch (e) {
-    //     Loading.hide()
-    //     this.$router.push('/dashboard/schedules')
-    //   }
-    // },
     getCourierList: async function (createdAt) {
       Loading.show()
       try {

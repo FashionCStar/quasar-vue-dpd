@@ -3,7 +3,7 @@
     <template>
       <div>
         <q-table
-          :class="is_mobile?'my-sticky-dynamic table-top-mobile':'my-sticky-dynamic'"
+          :class="is_mobile === 'ios'?'my-sticky-dynamic table-top-ios':is_mobile==='android'?'my-sticky-dynamic table-top-android': 'my-sticky-dynamic'"
           title="ROUTES"
           :data="routeList"
           :columns="columns"
@@ -12,6 +12,11 @@
           :filter="filter"
           @request="getRoutes"
           binary-state-sort
+          virtual-scroll
+          :virtual-scroll-item-size="48"
+          :virtual-scroll-sticky-size-start="48"
+          :rows-per-page-options="[0]"
+          @virtual-scroll="onScroll"
         >
           <template v-slot:top-left>
             <div class="items-center">
@@ -30,15 +35,15 @@
             <q-tr :props="props" @click.native="goToDetail(props.row)">
               <q-td key="no" :props="props">{{ props.row.index }}</q-td>
               <q-td key="route_number" :props="props">{{ props.row.route_number }}</q-td>
-              <q-td key="route_type" :props="props">{{ !props.row.route_type ? 'Regular Route' : 'Extra Route' }}</q-td>
-              <q-td key="buttons" :props="props">
+              <q-td key="route_type" :props="props">{{ !props.row.route_type ? 'DAILY' : 'EXTRA' }}</q-td>
+              <!-- <q-td key="buttons" :props="props">
                 <q-btn
                   flat
                   :icon=" 'fas fa-trash-alt' "
                   @click.native.stop
                   @click="remove(props.row)"
                 />
-              </q-td>
+              </q-td> -->
             </q-tr>
           </template>
 
@@ -71,12 +76,11 @@
       <q-dialog
         v-model="showDetail"
         persistent
-        :maximized="true"
         transition-show="scale"
         transition-hide="scale"
       >
-        <q-card style="background-color: #3E444E">
-          <q-bar style="background-color: #3E444E">
+        <q-card style="background-color: #3E444E; max-width: 500px; min-height: 500px">
+          <q-bar style="background-color: #272B33">
             <q-btn dense flat icon="close" color="white" v-close-popup>
               <q-tooltip content-class="bg-white text-black">Close</q-tooltip>
             </q-btn>
@@ -90,18 +94,17 @@
               @submit="onSubmit"
               ref="selectedNumber"
               :model="selectedNumber"
-              style="max-width: 400px; margin: auto;"
+              style="width: 320px; margin: auto;"
             >
               <div class="row justify-between q-col-gutter-md" >
                 <div class="col-12">
                   <span class="text-white">Route</span>
-                  <q-input dense outlined required label="Number" v-model="selectedNumber.route_number" color="blue-7" bg-color="white" input-class="text-black text-center"></q-input>
+                  <q-input dense outlined required v-model="selectedNumber.route_number" color="blue-7" bg-color="white" input-class="text-black"></q-input>
                   <q-separator class="q-my-md" color="grey-4" />
                   <span class="text-white">Type</span>
                   <q-select
                     dense
                     required
-                    label="Route"
                     outlined
                     v-model="selectedNumber.route_type"
                     :options="route_types"
@@ -111,7 +114,7 @@
                     map-options
                     class="q-mb-xs"
                     behavior="menu"
-                    color="blue-7" bg-color="white" input-class="text-black text-center"
+                    color="blue-7" bg-color="white" input-class="text-black"
                   >
                   </q-select>
                 </div>
@@ -160,18 +163,17 @@ export default {
         sortBy: 'route_number',
         descending: false,
         page: 1,
-        rowsPerPage: 10,
+        rowsPerPage: 100,
         rowsNumber: 20
       },
       route_types: [
-        { label: 'Regular Route', value: 0 },
-        { label: 'Extra Route', value: 1 }
+        { label: 'DAILY', value: 0 },
+        { label: 'EXTRA', value: 1 }
       ],
       columns: [
         { name: 'no', required: true, label: 'NO', align: 'left', field: 'no' },
-        { name: 'route_number', required: true, label: 'ROUTE', align: 'left', field: 'route_number', sortable: true },
-        { name: 'route_type', required: true, label: 'TYPE', align: 'center', field: 'route_type', sortable: true },
-        { name: 'buttons', label: '', field: 'buttons' }
+        { name: 'route_number', required: true, label: 'ROUTE', align: 'left', field: 'route_number' },
+        { name: 'route_type', required: true, label: 'TYPE', align: 'left', field: 'route_type' }
       ],
       routeList: [],
       selectedNumber: {
@@ -179,7 +181,7 @@ export default {
         route_type: ''
       },
       dialogTitle: '',
-      is_mobile: false,
+      is_mobile: 'web',
       isNewRecord: true
     }
   },
@@ -198,9 +200,13 @@ export default {
     // },
     checkPlatform () {
       if (this.$q.platform.is.mobile) {
-        this.is_mobile = true
+        if (this.$q.platform.is.ios) {
+          this.is_mobile = 'ios'
+        } else {
+          this.is_mobile = 'android'
+        }
       } else {
-        this.is_mobile = false
+        this.is_mobile = 'web'
       }
     },
     goToDetail (data) {
@@ -221,9 +227,23 @@ export default {
       // this.$router.push({ name: 'BuyerDetail', params: { id: id } })
       this.showDetail = true
     },
+    async onScroll ({ index, from, to, ref }) {
+      let { page, rowsPerPage, rowsNumber } = this.pagination
+      const lastIndex = this.routeList.length - 1
+      const lastPage = Math.ceil(rowsNumber / rowsPerPage)
+      if (index > 0 && page < lastPage && index === lastIndex) {
+        this.pagination.page++
+        await this.getRoutes({
+          pagination: this.pagination,
+          filter: this.filter,
+          isScroll: true
+        })
+      }
+    },
     getRoutes: async function (props) {
       let { page, rowsPerPage, rowsNumber, sortBy, descending } = props.pagination
       let filter = props.filter
+      let isScroll = props.isScroll
 
       // get all rows if "All" (0) is selected
       let fetchCount = rowsPerPage === 0 ? rowsNumber : rowsPerPage
@@ -249,10 +269,14 @@ export default {
         Loading.hide()
 
         // clear out existing vehicleList and add new
-        this.routeList = res.data.data
-        this.routeList.forEach((row, index) => {
-          row.index = index + 1
+        res.data.data.forEach((row, index) => {
+          row.index = (page - 1) * 10 + index + 1
         })
+        if (isScroll) {
+          this.routeList = this.routeList.concat(res.data.data)
+        } else {
+          this.routeList = res.data.data
+        }
         // update rowsCount with appropriate value
         this.pagination.rowsNumber = res.data.totalCount
 

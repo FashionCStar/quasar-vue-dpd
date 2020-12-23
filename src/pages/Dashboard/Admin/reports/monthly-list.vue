@@ -3,7 +3,7 @@
     <template>
       <div>
         <q-table
-          :class="is_mobile?'my-sticky-dynamic table-top-mobile':'my-sticky-dynamic'"
+          :class="is_mobile === 'ios'?'my-sticky-dynamic table-top-ios':is_mobile==='android'?'my-sticky-dynamic table-top-android': 'my-sticky-dynamic'"
           :data="monthlyList"
           :columns="userLevel === 'admin' ? columns_admin : columns"
           row-key="report_date"
@@ -11,6 +11,11 @@
           @request="getMonthlyList"
           binary-state-sort
           :pagination.sync="pagination"
+          virtual-scroll
+          :virtual-scroll-item-size="48"
+          :virtual-scroll-sticky-size-start="48"
+          :rows-per-page-options="[0]"
+          @virtual-scroll="onScroll"
         >
           <template v-slot:top>
             <div class="col-6 row justify-start">
@@ -53,9 +58,9 @@
           </template>
 
           <template v-slot:body="props">
-            <q-tr :props="props" @click="goToSingleDetail(props.row)">
+            <q-tr :props="props">
               <q-td key="index" :props="props">{{ props.row.index }}</q-td>
-              <q-td key="created_at" :props="props" class="text-uppercase">{{ changeDateFormat(props.row.created_at) }}</q-td>
+              <q-td key="report_date" :props="props" class="text-uppercase">{{ changeDateFormat(props.row.report_date) }}</q-td>
               <q-td key="route_number" :props="props">{{ props.row.route_number }}</q-td>
               <q-td key="courier_name" :props="props">{{ props.row.courier_name }}</q-td>
               <q-td key="is_group" :props="props">{{ props.row.is_group === 1 ? 'DAILY':'EXTRA' }}</q-td>
@@ -63,7 +68,7 @@
             </q-tr>
           </template>
 
-          <template v-slot:bottom="props">
+          <template v-slot:bottom>
             <div class="col-12 row justify-between">
               <div class="q-my-auto">
                 <q-btn
@@ -77,9 +82,9 @@
                   style="width: 60px; height:30px"
                 />
               </div>
-              <div class="col-6 row justify-end items-center">
+              <div class="row justify-end items-center">
                 Total Records: {{pagination.rowsNumber}}
-                <q-btn
+                <!-- <q-btn
                   icon="chevron_left"
                   color="grey-8"
                   round
@@ -97,7 +102,7 @@
                   flat
                   :disable="props.isLastPage"
                   @click="props.nextPage"
-                />
+                /> -->
               </div>
             </div>
           </template>
@@ -253,15 +258,15 @@ export default {
       endDateAPI: '',
       showDetail: false,
       pagination: {
-        sortBy: 'created_at',
+        sortBy: 'report_date',
         descending: true,
         page: 1,
-        rowsPerPage: 10,
-        rowsNumber: 20
+        rowsPerPage: 100,
+        rowsNumber: 200
       },
       columns: [
         { name: 'index', required: true, label: 'NO', align: 'left', field: 'index' },
-        { name: 'created_at', required: true, label: 'DATE', align: 'left', field: 'created_at' },
+        { name: 'report_date', required: true, label: 'DATE', align: 'left', field: 'report_date' },
         // { name: 'user_name', required: true, label: 'MANAGER', align: 'left', field: 'user_name', sortable: true },
         { name: 'route_number', required: true, label: 'ROUTE', align: 'left', field: 'route_number' },
         { name: 'courier_name', required: true, label: 'DRIVER', align: 'left', field: 'courier_name' },
@@ -269,7 +274,7 @@ export default {
       ],
       columns_admin: [
         { name: 'index', required: true, label: 'NO', align: 'left', field: 'index' },
-        { name: 'created_at', required: true, label: 'DATE', align: 'left', field: 'created_at' },
+        { name: 'report_date', required: true, label: 'DATE', align: 'left', field: 'report_date' },
         { name: 'route_number', required: true, label: 'ROUTE', align: 'left', field: 'route_number' },
         { name: 'courier_name', required: true, label: 'DRIVER', align: 'left', field: 'courier_name' },
         { name: 'is_group', required: true, label: 'TYPE', align: 'left', field: 'is_group' },
@@ -289,7 +294,8 @@ export default {
       couriers: [],
       filteredNames: [],
       rnc_id: '',
-      is_mobile: false
+      is_mobile: 'web',
+      isDateFilter: false
     }
   },
   computed: {
@@ -303,7 +309,7 @@ export default {
   mounted () {
     this.checkPlatform()
     this.$store.commit('auth/pageTitle', this.$router.currentRoute.meta.title)
-    this.fromDate = date.formatDate(date.startOfDate(new Date(), 'month'), 'DD/MM/YY ddd')
+    this.fromDate = date.formatDate(new Date(), 'DD/MM/YY ddd')
     this.fromDateAPI = date.formatDate(date.startOfDate(new Date(), 'month'), 'YYYY-MM-DD')
     this.endDate = date.formatDate(new Date(), 'DD/MM/YY ddd')
     this.endDateAPI = date.formatDate(new Date(), 'YYYY-MM-DD')
@@ -315,28 +321,36 @@ export default {
   methods: {
     checkPlatform () {
       if (this.$q.platform.is.mobile) {
-        this.is_mobile = true
+        if (this.$q.platform.is.ios) {
+          this.is_mobile = 'ios'
+        } else {
+          this.is_mobile = 'android'
+        }
       } else {
-        this.is_mobile = false
+        this.is_mobile = 'web'
       }
     },
     changeDateFormat (reportDate) {
-      let convertedDate = date.formatDate(date.addToDate(date.extractDate(reportDate, 'YYYY-MM-DD HH:mm:ss'), { hours: 5 }), 'DD-MM-YY dddd')
+      let convertedDate = date.formatDate(date.addToDate(date.extractDate(reportDate, 'YYYY-MM-DD'), { hours: 5 }), 'DD-MM-YY dddd')
       // let convertedDate = date.formatDate(date.extractDate(reportDate, 'YYYY-MM-DD HH:mm:ss'), 'DD-MM-YY ddd HH:mm')
       return convertedDate
     },
     onFromDateChanged (fromdate) {
       this.fromDateAPI = date.formatDate(date.extractDate(fromdate, 'DD/MM/YY ddd'), 'YYYY-MM-DD')
+      this.isDateFilter = true
+      this.pagination.page = 1
       this.getMonthlyList({
         pagination: this.pagination,
-        filter: undefined
+        filter: this.filter
       })
     },
     onEndDateChanged (enddate) {
       this.endDateAPI = date.formatDate(date.extractDate(enddate, 'DD/MM/YY ddd'), 'YYYY-MM-DD')
+      this.isDateFilter = true
+      this.pagination.page = 1
       this.getMonthlyList({
         pagination: this.pagination,
-        filter: undefined
+        filter: this.filter
       })
     },
     async goToSingleDetail (data) {
@@ -411,17 +425,6 @@ export default {
         // this.$router.push('/dashboard/schedules')
       }
     },
-    // filterFn (val, update, abort) {
-    //   update(() => {
-    //     if (val === '') {
-    //       this.filteredNames = []
-    //     } else {
-    //       const needle = val.toLowerCase()
-    //       this.filteredNames = this.couriers.filter(name => name.courier_name.toLowerCase().indexOf(needle) > -1)
-    //       this.filteredNames = this.filteredNames.slice(0, 3)
-    //     }
-    //   })
-    // },
     filterFn (val, update, abort) {
       update(() => {
         if (val === '') {
@@ -444,13 +447,22 @@ export default {
     // goToDetail (id) {
     //   this.$router.push({ name: 'Edit Schedule', params: { id: id } })
     // },
+
     // getMonthlyAll: async function (props) {
-    //   let { page, rowsPerPage, sortBy, descending } = props.pagination
+    //   let { page, rowsPerPage, rowsNumber, sortBy, descending } = props.pagination
     //   let filter = props.filter
+
+    //   // get all rows if "All" (0) is selected
+    //   let fetchCount = rowsPerPage === 0 ? rowsNumber : rowsPerPage
+
+    //   // calculate starting row of driverList
+    //   let startRow = (page - 1) * rowsPerPage
 
     //   const params = {
     //     conditions: {
     //     },
+    //     start: startRow,
+    //     numPerPage: fetchCount,
     //     sortBy: sortBy,
     //     descending: descending,
     //     fromDate: this.fromDateAPI,
@@ -469,7 +481,7 @@ export default {
     //     // clear out existing vehicleList and add new
     //     this.monthlyList = res.data.data
     //     this.monthlyList.forEach((row, index) => {
-    //       row.index = index + 1
+    //       row.index = (page - 1) * 10 + index + 1
     //     })
 
     //     // update rowsCount with appropriate value
@@ -487,9 +499,25 @@ export default {
     //     console.log('errorrrrrrrrrr', e)
     //   }
     // },
+
+    async onScroll ({ index, from, to, ref }) {
+      let { page, rowsPerPage, rowsNumber } = this.pagination
+      const lastIndex = this.monthlyList.length - 1
+      const lastPage = Math.ceil(rowsNumber / rowsPerPage)
+      if (index > 0 && page < lastPage && index === lastIndex) {
+        this.pagination.page++
+        await this.getMonthlyList({
+          pagination: this.pagination,
+          filter: this.filter,
+          isScroll: true
+        })
+      }
+    },
+
     getMonthlyList: async function (props) {
       let { page, rowsPerPage, rowsNumber, sortBy, descending } = props.pagination
       let filter = props.filter
+      let isScroll = props.isScroll
 
       // get all rows if "All" (0) is selected
       let fetchCount = rowsPerPage === 0 ? rowsNumber : rowsPerPage
@@ -499,6 +527,7 @@ export default {
 
       const params = {
         conditions: {
+          is_date_filter: true
         },
         start: startRow,
         numPerPage: fetchCount,
@@ -510,6 +539,9 @@ export default {
       if (filter) {
         params.conditions.filter = filter
       }
+      if (!this.isDateFilter) {
+        params.conditions.is_date_filter = false
+      }
 
       // fetch vehicleList from "server"
       Loading.show()
@@ -518,10 +550,14 @@ export default {
         Loading.hide()
 
         // clear out existing vehicleList and add new
-        this.monthlyList = res.data.data
-        this.monthlyList.forEach((row, index) => {
+        res.data.data.forEach((row, index) => {
           row.index = (page - 1) * 10 + index + 1
         })
+        if (isScroll) {
+          this.monthlyList = this.monthlyList.concat(res.data.data)
+        } else {
+          this.monthlyList = res.data.data
+        }
 
         // update rowsCount with appropriate value
         this.pagination.rowsNumber = res.data.totalCount
@@ -563,7 +599,7 @@ export default {
           })
           this.getMonthlyList({
             pagination: this.pagination,
-            filter: undefined
+            filter: this.filter
           })
         } catch (e) {
           Loading.hide()

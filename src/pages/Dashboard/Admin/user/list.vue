@@ -3,7 +3,7 @@
     <template>
       <div>
         <q-table
-          :class="is_mobile?'my-sticky-dynamic table-top-mobile':'my-sticky-dynamic'"
+          :class="is_mobile === 'ios'?'my-sticky-dynamic table-top-ios':is_mobile==='android'?'my-sticky-dynamic table-top-android': 'my-sticky-dynamic'"
           title="Users"
           :data="userList"
           :columns="columns"
@@ -145,7 +145,7 @@ export default {
         { name: 'buttons', label: '', field: 'buttons' }
       ],
       userList: [],
-      is_mobile: false
+      is_mobile: 'web'
     }
   },
   mounted () {
@@ -160,9 +160,13 @@ export default {
   methods: {
     checkPlatform () {
       if (this.$q.platform.is.mobile) {
-        this.is_mobile = true
+        if (this.$q.platform.is.ios) {
+          this.is_mobile = 'ios'
+        } else {
+          this.is_mobile = 'android'
+        }
       } else {
-        this.is_mobile = false
+        this.is_mobile = 'web'
       }
     },
     createNew () {

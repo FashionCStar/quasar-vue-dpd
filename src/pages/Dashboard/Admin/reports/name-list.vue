@@ -3,7 +3,7 @@
     <template>
       <div>
         <q-table
-          :class="is_mobile?'my-sticky-dynamic table-top-mobile':'my-sticky-dynamic'"
+          :class="is_mobile === 'ios'?'my-sticky-dynamic table-top-ios':is_mobile==='android'?'my-sticky-dynamic table-top-android': 'my-sticky-dynamic'"
           title="COURIERS"
           :data="courierList"
           :columns="columns"
@@ -12,6 +12,11 @@
           :filter="filter"
           @request="getCouriers"
           binary-state-sort
+          virtual-scroll
+          :virtual-scroll-item-size="48"
+          :virtual-scroll-sticky-size-start="48"
+          :rows-per-page-options="[0]"
+          @virtual-scroll="onScroll"
         >
           <template v-slot:top-left>
             <div class="items-center">
@@ -30,21 +35,21 @@
             <q-tr :props="props" @click.native="goToDetail(props.row)">
               <q-td key="no" :props="props">{{ props.row.index }}</q-td>
               <q-td key="courier_name" :props="props">{{ props.row.courier_name }}</q-td>
-              <q-td key="buttons" :props="props">
+              <!-- <q-td key="buttons" :props="props">
                 <q-btn
                   flat
                   :icon=" 'fas fa-trash-alt' "
                   @click.native.stop
                   @click="remove(props.row)"
                 />
-              </q-td>
+              </q-td> -->
             </q-tr>
           </template>
 
-          <template v-slot:bottom="props">
+          <template v-slot:bottom>
             <div class="col-12 row justify-end items-center">
               Total Records: {{pagination.rowsNumber}}
-              <q-btn
+              <!-- <q-btn
                 icon="chevron_left"
                 color="grey-8"
                 round
@@ -62,7 +67,7 @@
                 flat
                 :disable="props.isLastPage"
                 @click="props.nextPage"
-              />
+              /> -->
             </div>
           </template>
         </q-table>
@@ -70,12 +75,11 @@
       <q-dialog
         v-model="showDetail"
         persistent
-        :maximized="true"
         transition-show="scale"
         transition-hide="scale"
       >
-        <q-card style="background-color: #3E444E">
-          <q-bar style="background-color: #3E444E">
+        <q-card style="background-color: #3E444E; max-width: 500px; min-height: 500px">
+          <q-bar style="background-color: #272B33">
             <q-btn dense flat icon="close" color="white" v-close-popup>
               <q-tooltip content-class="bg-white text-black">Close</q-tooltip>
             </q-btn>
@@ -88,7 +92,7 @@
               @submit="onSubmit"
               ref="selectedName"
               :model="selectedName"
-              style="max-width: 400px; margin: auto;"
+              style="width: 320px; margin: auto;"
             >
               <div class="row justify-between q-col-gutter-md" >
                 <div class="col-12">
@@ -126,6 +130,38 @@
   </q-page>
 </template>
 
+<style lang="stylus">
+.my-sticky-dynamic
+  /* height or max-height is important */
+  height: calc(100vh - 62px)
+
+  .q-table__top,
+  .q-table__bottom
+    background-color: #3E444E
+    color: white
+    border-radius: 0px !important
+
+  thead tr:first-child th /* bg color is important for th; just specify one */
+    background-color: #272B33
+    color: white
+
+  thead tr th
+    position: sticky
+    z-index: 1
+  /* this will be the loading indicator */
+  thead tr:last-child th
+    /* height of all previous header rows */
+    top: 48px
+  thead tr:first-child th
+    top: 0
+
+.table-top-mobile
+  height: calc(100vh - 170px) !important
+  .q-table__top
+    height: 104px !important
+    padding: 0px 16px
+</style>
+
 <script>
 
 import { api } from 'src/boot/api'
@@ -141,20 +177,19 @@ export default {
         sortBy: 'courier_name',
         descending: false,
         page: 1,
-        rowsPerPage: 10,
+        rowsPerPage: 100,
         rowsNumber: 20
       },
       columns: [
         { name: 'no', required: true, label: 'NO', align: 'left', field: 'no' },
-        { name: 'courier_name', required: true, label: 'COURIER', align: 'left', field: 'courier_name', sortable: true },
-        { name: 'buttons', label: '', field: 'buttons' }
+        { name: 'courier_name', required: true, label: 'COURIER', align: 'left', field: 'courier_name', sortable: true }
       ],
       courierList: [],
       selectedName: {
         courier_name: ''
       },
       dialogTitle: '',
-      is_mobile: false,
+      is_mobile: 'web',
       isNewRecord: true
     }
   },
@@ -170,9 +205,13 @@ export default {
   methods: {
     checkPlatform () {
       if (this.$q.platform.is.mobile) {
-        this.is_mobile = true
+        if (this.$q.platform.is.ios) {
+          this.is_mobile = 'ios'
+        } else {
+          this.is_mobile = 'android'
+        }
       } else {
-        this.is_mobile = false
+        this.is_mobile = 'web'
       }
     },
     createNew () {
@@ -194,9 +233,23 @@ export default {
       // this.$router.push({ name: 'BuyerDetail', params: { id: id } })
       this.showDetail = true
     },
+    async onScroll ({ index, from, to, ref }) {
+      let { page, rowsPerPage, rowsNumber } = this.pagination
+      const lastIndex = this.courierList.length - 1
+      const lastPage = Math.ceil(rowsNumber / rowsPerPage)
+      if (index > 0 && page < lastPage && index === lastIndex) {
+        this.pagination.page++
+        await this.getCouriers({
+          pagination: this.pagination,
+          filter: this.filter,
+          isScroll: true
+        })
+      }
+    },
     getCouriers: async function (props) {
       let { page, rowsPerPage, rowsNumber, sortBy, descending } = props.pagination
       let filter = props.filter
+      let isScroll = props.isScroll
 
       // get all rows if "All" (0) is selected
       let fetchCount = rowsPerPage === 0 ? rowsNumber : rowsPerPage
@@ -221,11 +274,15 @@ export default {
         let res = await api.getCouriers(params)
         Loading.hide()
 
-        // clear out existing vehicleList and add new
-        this.courierList = res.data.data
-        this.courierList.forEach((row, index) => {
-          row.index = index + 1
+        res.data.data.forEach((row, index) => {
+          row.index = (page - 1) * 10 + index + 1
         })
+        // clear out existing vehicleList and add new
+        if (isScroll) {
+          this.courierList = this.courierList.concat(res.data.data)
+        } else {
+          this.courierList = res.data.data
+        }
         // update rowsCount with appropriate value
         this.pagination.rowsNumber = res.data.totalCount
 

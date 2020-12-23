@@ -52,8 +52,17 @@ $customcolor     : #009688
 .q-field--standard .q-field__control:before, .q-field--standard .q-field__control:hover:before
   border-color: white
 
-.table-top-mobile
+.table-top-android
+  height: calc(100vh - 120px) !important
+  .q-table__top
+    height: 104px !important
+    padding: 0px 16px
+
+.table-top-ios
   height: calc(100vh - 170px) !important
   .q-table__top
     height: 104px !important
     padding: 0px 16px
+
+.q-field__bottom
+  padding: 2px 12px 0;
