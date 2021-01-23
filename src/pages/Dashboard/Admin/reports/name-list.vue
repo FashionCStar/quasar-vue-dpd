@@ -6,7 +6,7 @@
           :class="is_mobile === 'ios'?'my-sticky-dynamic table-top-ios':is_mobile==='android'?'my-sticky-dynamic table-top-android': 'my-sticky-dynamic'"
           title="COURIERS"
           :data="courierList"
-          :columns="columns"
+          :columns="userLevel === 'admin' ? columns_admin : columns"
           row-key="courier_name"
           :pagination.sync="pagination"
           :filter="filter"
@@ -35,6 +35,7 @@
             <q-tr :props="props" @click.native="goToDetail(props.row)">
               <q-td key="no" :props="props">{{ props.row.index }}</q-td>
               <q-td key="courier_name" :props="props">{{ props.row.courier_name }}</q-td>
+              <q-td v-if="userLevel === 'admin'" key="user_name" :props="props">{{ props.row.user.name }}</q-td>
               <!-- <q-td key="buttons" :props="props">
                 <q-btn
                   flat
@@ -184,6 +185,11 @@ export default {
         { name: 'no', required: true, label: 'NO', align: 'left', field: 'no' },
         { name: 'courier_name', required: true, label: 'COURIER', align: 'left', field: 'courier_name', sortable: true }
       ],
+      columns_admin: [
+        { name: 'no', required: true, label: 'NO', align: 'left', field: 'no' },
+        { name: 'courier_name', required: true, label: 'COURIER', align: 'left', field: 'courier_name', sortable: true },
+        { name: 'user_name', required: true, label: 'USER', align: 'left', field: 'username', sortable: true }
+      ],
       courierList: [],
       selectedName: {
         courier_name: ''
@@ -191,6 +197,14 @@ export default {
       dialogTitle: '',
       is_mobile: 'web',
       isNewRecord: true
+    }
+  },
+  computed: {
+    // ...mapFields('commons', ['pageMeta'])
+    userLevel: {
+      get () {
+        return this.$store.state.auth.userLevel
+      }
     }
   },
   mounted () {

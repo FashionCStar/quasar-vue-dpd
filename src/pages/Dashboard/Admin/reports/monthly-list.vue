@@ -262,7 +262,7 @@ export default {
         descending: true,
         page: 1,
         rowsPerPage: 100,
-        rowsNumber: 200
+        rowsNumber: 20000
       },
       columns: [
         { name: 'index', required: true, label: 'NO', align: 'left', field: 'index' },
@@ -281,6 +281,7 @@ export default {
         { name: 'user_name', required: true, label: 'USER', align: 'left', field: 'user_name' }
       ],
       monthlyList: [],
+      monthlyAll: [],
       selectedRecord: {
         id: '',
         report_date: '',
@@ -551,7 +552,7 @@ export default {
 
         // clear out existing vehicleList and add new
         res.data.data.forEach((row, index) => {
-          row.index = (page - 1) * 10 + index + 1
+          row.index = (page - 1) * 100 + index + 1
         })
         if (isScroll) {
           this.monthlyList = this.monthlyList.concat(res.data.data)
@@ -567,6 +568,42 @@ export default {
         this.pagination.rowsPerPage = rowsPerPage
         this.pagination.sortBy = sortBy
         this.pagination.descending = descending
+
+        // ...and turn of loading indicator
+      } catch (e) {
+        Loading.hide()
+        console.log('errorrrrrrrrrr', e)
+      }
+    },
+
+    getMonthlyAll: async function (props) {
+      let filter = props.filter
+
+      const params = {
+        conditions: {
+          is_date_filter: true
+        },
+        fromDate: this.fromDateAPI,
+        endDate: this.endDateAPI
+      }
+      if (filter) {
+        params.conditions.filter = filter
+      }
+      if (!this.isDateFilter) {
+        params.conditions.is_date_filter = false
+      }
+
+      // fetch vehicleList from "server"
+      Loading.show()
+      try {
+        let res = await api.getMonthlyReportsAll(params)
+        Loading.hide()
+
+        // clear out existing vehicleList and add new
+        res.data.data.forEach((row, index) => {
+          row.index = index + 1
+        })
+        this.monthlyAll = res.data.data
 
         // ...and turn of loading indicator
       } catch (e) {
@@ -608,13 +645,21 @@ export default {
       }).onDismiss(() => {
       })
     },
-    exportTable () {
+    async exportTable () {
+      // get All records before export
+      await this.getMonthlyAll({ filter: this.filter })
       // naive encoding to csv format
-      const content = [ this.columns.map(col => wrapCsvValue(col.label)) ].concat(
-        this.monthlyList.map(row => this.columns.map(col => {
+      let columns = this.userLevel === 'admin' ? this.columns_admin : this.columns
+      const content = [ columns.map(col => wrapCsvValue(col.label)) ].concat(
+        this.monthlyAll.map(row => columns.map(col => {
           if (col.field === 'is_group') {
             return wrapCsvValue(
               row.is_group === 1 ? 'DAILY' : 'EXTRA',
+              col.format
+            )
+          } else if (col.field === 'user_name') {
+            return wrapCsvValue(
+              row.user.name,
               col.format
             )
           } else {
@@ -627,7 +672,7 @@ export default {
       ).join('\r\n')
 
       const status = exportFile(
-        'table-export.xls',
+        'table-export.csv',
         content,
         'text/csv'
       )

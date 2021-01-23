@@ -5,7 +5,7 @@
         <q-table
           :class="is_mobile === 'ios'?'my-sticky-dynamic table-top-ios':is_mobile==='android'?'my-sticky-dynamic table-top-android': 'my-sticky-dynamic'"
           :data="reportList"
-          :columns="columns"
+          :columns="userLevel === 'admin' ? columns_admin : columns"
           row-key="report_date"
           :filter="filter"
           @request="getReportList"
@@ -68,7 +68,7 @@
               <q-td key="no" :props="props">{{ props.row.index }}</q-td>
               <q-td key="report_date" :props="props" class="text-uppercase">{{ changeDateFormat(props.row.report_date) }}</q-td>
               <q-td key="is_group" :props="props">{{ props.row.is_group === 1 ? 'DAILY' : 'EXTRA' }}</q-td>
-              <q-td key="user_name" :props="props">{{ props.row.user.name }}</q-td>
+              <q-td v-if="userLevel === 'admin'" key="user_name" :props="props">{{ props.row.user.name }}</q-td>
               <q-td key="buttons" :props="props">
                 <q-btn
                   rounded
@@ -84,7 +84,7 @@
           <template v-slot:bottom>
             <div class="col-12 row justify-between">
               <div class="q-my-auto">
-                <q-btn
+                <!-- <q-btn
                   label="Export"
                   no-caps
                   dense
@@ -93,7 +93,7 @@
                   @click="exportTable"
                   class="q-ma-none"
                   style="width: 60px; height:30px;"
-                />
+                /> -->
               </div>
               <div class="row justify-end items-center">
                 Total Records: {{pagination.rowsNumber}}
@@ -478,6 +478,12 @@ export default {
         { name: 'no', required: true, label: 'NO', align: 'left', field: 'no' },
         { name: 'report_date', required: true, label: 'DATE', align: 'left', field: 'report_date' },
         { name: 'is_group', required: true, label: 'TYPE', align: 'left', field: 'is_group' },
+        { name: 'buttons', label: '', field: 'buttons' }
+      ],
+      columns_admin: [
+        { name: 'no', required: true, label: 'NO', align: 'left', field: 'no' },
+        { name: 'report_date', required: true, label: 'DATE', align: 'left', field: 'report_date' },
+        { name: 'is_group', required: true, label: 'TYPE', align: 'left', field: 'is_group' },
         { name: 'user_name', required: true, label: 'USER', align: 'left', field: 'user_name' },
         { name: 'buttons', label: '', field: 'buttons' }
       ],
@@ -511,6 +517,14 @@ export default {
       rnc_id: '',
       isDateFilter: false,
       showEmptyConfirm: false
+    }
+  },
+  computed: {
+    // ...mapFields('commons', ['pageMeta'])
+    userLevel: {
+      get () {
+        return this.$store.state.auth.userLevel
+      }
     }
   },
   async mounted () {
@@ -584,23 +598,27 @@ export default {
     },
     exportTable () {
       // naive encoding to csv format
-      const content = [ this.columns.map(col => wrapCsvValue(col.label)) ].concat(
-        this.reportList.map(row => this.columns.map(col => {
+      let columns = this.userLevel === 'admin' ? this.columns_admin : this.columns
+      const content = [ columns.map(col => wrapCsvValue(col.label)) ].concat(
+        this.reportList.map(row => columns.map(col => {
           if (col.field === 'is_group') {
             return wrapCsvValue(
               row.is_group === 1 ? 'DAILY' : 'EXTRA',
               col.format
             )
-          }
-          if (col.field === 'user_name') {
+          } else if (col.field === 'user_name') {
             return wrapCsvValue(
               row.user.name,
               col.format
             )
-          }
-          if (col.field === 'report_date') {
+          } else if (col.field === 'report_date') {
             return wrapCsvValue(
               row.report_date,
+              col.format
+            )
+          } else {
+            return wrapCsvValue(
+              row[col.field],
               col.format
             )
           }
@@ -609,7 +627,7 @@ export default {
       ).join('\r\n')
 
       const status = exportFile(
-        'table-export.xls',
+        'table-export.csv',
         content,
         'text/csv'
       )

@@ -6,7 +6,7 @@
           :class="is_mobile === 'ios'?'my-sticky-dynamic table-top-ios':is_mobile==='android'?'my-sticky-dynamic table-top-android': 'my-sticky-dynamic'"
           title="ROUTES"
           :data="routeList"
-          :columns="columns"
+          :columns="userLevel === 'admin' ? columns_admin : columns"
           row-key="route_number"
           :pagination.sync="pagination"
           :filter="filter"
@@ -36,6 +36,7 @@
               <q-td key="no" :props="props">{{ props.row.index }}</q-td>
               <q-td key="route_number" :props="props">{{ props.row.route_number }}</q-td>
               <q-td key="route_type" :props="props">{{ !props.row.route_type ? 'DAILY' : 'EXTRA' }}</q-td>
+              <q-td v-if="userLevel === 'admin'" key="user_name" :props="props">{{ props.row.user.name }}</q-td>
               <!-- <q-td key="buttons" :props="props">
                 <q-btn
                   flat
@@ -175,6 +176,12 @@ export default {
         { name: 'route_number', required: true, label: 'ROUTE', align: 'left', field: 'route_number' },
         { name: 'route_type', required: true, label: 'TYPE', align: 'left', field: 'route_type' }
       ],
+      columns_admin: [
+        { name: 'no', required: true, label: 'NO', align: 'left', field: 'no' },
+        { name: 'route_number', required: true, label: 'ROUTE', align: 'left', field: 'route_number' },
+        { name: 'route_type', required: true, label: 'TYPE', align: 'left', field: 'route_type' },
+        { name: 'user_name', required: true, label: 'USER', align: 'left', field: 'user_name' }
+      ],
       routeList: [],
       selectedNumber: {
         route_number: '',
@@ -193,6 +200,14 @@ export default {
       pagination: this.pagination,
       filter: undefined
     })
+  },
+  computed: {
+    // ...mapFields('commons', ['pageMeta'])
+    userLevel: {
+      get () {
+        return this.$store.state.auth.userLevel
+      }
+    }
   },
   methods: {
     // createNew () {
