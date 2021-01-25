@@ -49,7 +49,7 @@
     <q-separator color="white"/>
     <q-item
       clickable
-      to="/dashboard/couriers"
+      to="/dashboard/drivers"
       active-class="router--active"
     >
       <q-item-section avatar>

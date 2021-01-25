@@ -4,7 +4,7 @@
       <div>
         <q-table
           :class="is_mobile === 'ios'?'my-sticky-dynamic table-top-ios':is_mobile==='android'?'my-sticky-dynamic table-top-android': 'my-sticky-dynamic'"
-          title="COURIERS"
+          title="DRIVERS"
           :data="courierList"
           :columns="userLevel === 'admin' ? columns_admin : columns"
           row-key="courier_name"
@@ -97,7 +97,7 @@
             >
               <div class="row justify-between q-col-gutter-md" >
                 <div class="col-12">
-                  <span class="text-white">Route</span>
+                  <span class="text-white">Driver</span>
                   <q-input dense outlined required color="blue-7" bg-color="white" input-class="text-black text-center" v-model="selectedName.courier_name"></q-input>
                 </div>
               </div>
@@ -183,12 +183,12 @@ export default {
       },
       columns: [
         { name: 'no', required: true, label: 'NO', align: 'left', field: 'no' },
-        { name: 'courier_name', required: true, label: 'COURIER', align: 'left', field: 'courier_name', sortable: true }
+        { name: 'courier_name', required: true, label: 'COURIER', align: 'left', field: 'courier_name' }
       ],
       columns_admin: [
         { name: 'no', required: true, label: 'NO', align: 'left', field: 'no' },
-        { name: 'courier_name', required: true, label: 'COURIER', align: 'left', field: 'courier_name', sortable: true },
-        { name: 'user_name', required: true, label: 'USER', align: 'left', field: 'username', sortable: true }
+        { name: 'courier_name', required: true, label: 'COURIER', align: 'left', field: 'courier_name' },
+        { name: 'user_name', required: true, label: 'USER', align: 'left', field: 'username' }
       ],
       courierList: [],
       selectedName: {
@@ -350,18 +350,18 @@ export default {
         filter: undefined
       })
     },
-    remove (name) {
+    remove () {
       // Confirm Remove Vehicle
       this.$q.dialog({
         title: 'Confirm',
-        message: 'Are you surely remove ' + name.courier_name + '?',
+        message: 'Are you surely remove ' + this.selectedName.courier_name + '?',
         cancel: true,
         persistent: true,
         color: 'blue-7'
       }).onOk(async () => {
         const params = {
           conditions: {
-            id: name.id
+            id: this.selectedName.id
           }
         }
         Loading.show()
@@ -372,8 +372,9 @@ export default {
           this.$q.notify({
             color: 'positive',
             position: 'top',
-            message: name.courier_name + ' is removed successfully !'
+            message: this.selectedName.courier_name + ' is removed successfully !'
           })
+          this.cancelDetail()
           this.getCouriers({
             pagination: this.pagination,
             filter: undefined

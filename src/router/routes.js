@@ -148,10 +148,10 @@ const routes = [
             component: () => import('pages/Dashboard/Admin/reports/monthly-list.vue')
           },
           {
-            path: 'couriers',
-            name: 'Couriers',
+            path: 'drivers',
+            name: 'Drivers',
             meta: {
-              title: 'COURIERS',
+              title: 'DRIVERS',
               roles: ['admin', 'user']
             },
             component: () => import('pages/Dashboard/Admin/reports/name-list.vue')

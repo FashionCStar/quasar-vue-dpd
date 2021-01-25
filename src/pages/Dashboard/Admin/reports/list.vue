@@ -459,8 +459,8 @@ export default {
       showDailyDetail: false,
       showAddDlg: false,
       add_options: [
-        { label: 'FD routes', value: 'fd_routes' },
-        { label: 'Extra route', value: 'extra_route' }
+        { label: 'DAILY', value: 'daily' },
+        { label: 'EXTRA', value: 'extra' }
       ],
       selectedOption: '',
       pagination: {
@@ -641,9 +641,9 @@ export default {
       }
     },
     addRecord () {
-      if (this.selectedOption === 'extra_route') {
+      if (this.selectedOption === 'extra') {
         this.goToExtraDetail()
-      } else if (this.selectedOption === 'fd_routes') {
+      } else if (this.selectedOption === 'daily') {
         // this.$router.push('/dashboard/schedules/new')
         this.goToDailyDetail()
       }
