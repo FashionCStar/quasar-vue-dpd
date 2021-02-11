@@ -23,7 +23,14 @@ Route::post('sendVerifyPhone', 'UserController@sendVerifyPhone');
 Route::post('uploadUserAvatar', 'UserController@uploadUserAvatar');
 Route::post('forgotPassword', 'ResetPasswordController@sendPasswordResetEmail');
 Route::post('resetPassword', 'ResetPasswordController@resetPassword');
+Route::post('loginDriver', 'DriverController@login');
 //Route::post('confirmUser', 'UserController@confirmUser')->middleware('auth:api');
+Route::post('/getMonthlyReportsByDriver', 'DriverController@getMonthlyReportsByDriver');
+// Route::group(['middleware' => 'auth:driver'], function () {
+// });
+
+Route::post('/getLocatorResults', 'LocatorController@getLocatorResults');
+
 Route::group(['middleware' => 'auth:api'], function () {
   Route::post('/registerUser', 'UserController@register');
   Route::post('/updateUser', 'UserController@updateUser');
@@ -31,15 +38,18 @@ Route::group(['middleware' => 'auth:api'], function () {
   Route::post('/confirmUser', 'UserController@confirmUser');
   Route::get('/my-profile', 'UserController@myProfile');
   Route::post('/update-profile', 'UserController@updateProfile');
+  Route::post('/getClients', 'UserController@getClients');
   Route::post('/getUsers', 'UserController@getUsers');
+  Route::get('/getClientDetails', 'UserController@getClientDetails');
   Route::get('/getUserDetails', 'UserController@getUserDetails');
   Route::get('/getRegularRoutes', 'ReportController@getRegularRoutes');
   Route::get('/getExtraRoutes', 'ReportController@getExtraRoutes');
-  Route::get('/getCourierList', 'ReportController@getCourierAll');
-  Route::post('/getCouriers', 'ReportController@getCouriers');
-  Route::post('/createCourier', 'ReportController@createCourier');
-  Route::post('/updateCourier', 'ReportController@updateCourier');
-  Route::post('/removeCourier', 'ReportController@removeCourier');
+  Route::get('/getDriverList', 'DriverController@getDriverAll');
+  Route::post('/getDrivers', 'DriverController@getDrivers');
+  Route::get('/getDriverDetails', 'DriverController@getDriverDetails');
+  Route::post('/createDriver', 'DriverController@createDriver');
+  Route::post('/updateDriver', 'DriverController@updateDriver');
+  Route::post('/removeDriver', 'DriverController@removeDriver');
   Route::post('/getRoutes', 'ReportController@getRoutes');
   Route::get('/getFDNumberByID', 'ReportController@getFDNumberByID');
   Route::post('/createRoute', 'ReportController@createRoute');
@@ -47,7 +57,6 @@ Route::group(['middleware' => 'auth:api'], function () {
   Route::post('/removeRoute', 'ReportController@removeRoute');
   Route::post('/getReports', 'ReportController@getReports');
   Route::post('/getReportsAll', 'ReportController@getReportsAll');
-  // Route::post('/getMonthlyReports', 'ReportController@getMonthlyReports');
   Route::post('/getMonthlyReports', 'ReportController@getMonthlyReports');
   Route::post('/getMonthlyReportsAll', 'ReportController@getMonthlyAll');
   Route::post('/createReport', 'ReportController@createReport');
@@ -57,5 +66,7 @@ Route::group(['middleware' => 'auth:api'], function () {
   Route::post('/createSingleRecord', 'ReportController@createSingleRecord');
   Route::post('/updateSingleRecord', 'ReportController@updateSingleRecord');
   Route::post('/removeSingleRecord', 'ReportController@removeSingleRecord');
-  Route::get('/getRNCID', 'ReportController@getRNCID');
+  Route::get('/getRNCID', 'DriverController@getRNCID');
+  
+  Route::post('/activeUser', 'UserController@activeUser');
 });

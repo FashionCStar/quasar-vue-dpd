@@ -4,12 +4,10 @@
       <q-toolbar reveal >
         <router-link to="/">
           <div class="q-py-sm q-mx-lg">
-            <q-img :src="require('../assets/images/logo.png')" style="width: 50px;" />
+            <q-img :src="require('../assets/images/ukcourier_logo.svg')" style="max-height:60px; width: 100%" />
           </div>
         </router-link>
         <q-toolbar-title> </q-toolbar-title>
-        <q-btn label="Login" color="green-8" flat :to="{name: 'Login'}"/>
-        <q-btn label="Signup" color="green-8" flat :to="{name: 'Signup'}"/>
       </q-toolbar>
     </q-header>
   </q-layout>

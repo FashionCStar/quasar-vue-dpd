@@ -14,7 +14,9 @@ module.exports = function (ctx) {
       'vuelidate',
       'vee-validate',
       'vue-signature-pad',
-      'custom-input'
+      'custom-input',
+      'qgmap',
+      'leaflet'
     ],
 
     css: ['app.sass', 'quasar.variables.sass'],
@@ -67,6 +69,14 @@ module.exports = function (ctx) {
           )
         }
       }
+      // env: {
+      //   options: JSON.stringify({
+      //     load: {
+      //       key: 'AIzaSyAIIKEQ_zjjXfOjB5R-ZlkSU37lX2fD19M'
+      //     },
+      //     installComponents: true
+      //   })
+      // }
       // env: {
       //   api: JSON.stringify(
       //     ctx.dev ? '/api' : 'http://some.endpoint/api' // production end-point

@@ -254,6 +254,10 @@ import qboot_Bootvuesignaturepad from 'boot/vue-signature-pad'
 
 import qboot_Bootcustominput from 'boot/custom-input'
 
+import qboot_Bootqgmap from 'boot/qgmap'
+
+import qboot_Bootleaflet from 'boot/leaflet'
+
 import qboot_Quasarquasarappextensionqcalendarsrcbootregisterjs from '@quasar/quasar-app-extension-qcalendar/src/boot/register.js'
 
 
@@ -262,6 +266,12 @@ import qboot_Quasarquasarappextensionqcalendarsrcbootregisterjs from '@quasar/qu
 
 
 
+Vue.config.devtools = true
+Vue.config.productionTip = false
+
+
+
+console.info('[Quasar] Running SPA.')
 
 
 
@@ -280,7 +290,7 @@ async function start () {
   }
 
   const urlPath = window.location.href.replace(window.location.origin, '')
-  const bootFiles = [qboot_Bootapi,qboot_Bootaxios,qboot_BootrouteGuard,qboot_Bootbasecomponents,qboot_Bootvuelidate,qboot_Bootveevalidate,qboot_Bootvuesignaturepad,qboot_Bootcustominput,qboot_Quasarquasarappextensionqcalendarsrcbootregisterjs]
+  const bootFiles = [qboot_Bootapi,qboot_Bootaxios,qboot_BootrouteGuard,qboot_Bootbasecomponents,qboot_Bootvuelidate,qboot_Bootveevalidate,qboot_Bootvuesignaturepad,qboot_Bootcustominput,qboot_Bootqgmap,qboot_Bootleaflet,qboot_Quasarquasarappextensionqcalendarsrcbootregisterjs]
 
   for (let i = 0; routeUnchanged === true && i < bootFiles.length; i++) {
     if (typeof bootFiles[i] !== 'function') {

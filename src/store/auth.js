@@ -1,10 +1,12 @@
 const state = {
   loggedIn: false,
   user: {},
+  driver: {},
   token: '',
   isAdmin: '',
   pageTitle: '',
-  userLevel: ''
+  userLevel: '',
+  userRoles: ''
 }
 
 const getters = {
@@ -17,6 +19,9 @@ const getters = {
   user: state => {
     return state.user
   },
+  driver: state => {
+    return state.driver
+  },
   isAdmin: state => {
     return state.isAdmin
   },
@@ -25,6 +30,9 @@ const getters = {
   },
   userLevel: state => {
     return state.userLevel
+  },
+  userRoles: state => {
+    return state.userRoles
   }
 }
 
@@ -35,10 +43,14 @@ const mutations = {
   user (state, user) {
     state.user = user
   },
+  driver (state, driver) {
+    state.driver = driver
+  },
   login (state, auth) {
     state.loggedIn = !!auth.token
     state.token = auth.token
     state.user = auth.user
+    state.driver = auth.driver
   },
   token (state, token) {
     state.token = token
@@ -52,10 +64,14 @@ const mutations = {
   userLevel (state, userLevel) {
     state.userLevel = userLevel
   },
+  userRoles (state, userRoles) {
+    state.userRoles = userRoles
+  },
   logout (state) {
     state.loggedIn = false
     state.token = ''
     state.user = {}
+    state.driver = {}
   }
 }
 

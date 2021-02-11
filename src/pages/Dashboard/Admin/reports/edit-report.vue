@@ -39,17 +39,17 @@
             </q-card-section>
             <div v-for="(data, index) in reportForm.report_data" :key="data.route_id">
               <q-card-section class="text-left q-pb-none">
-                <span class="text-white">Courier</span>
+                <span class="text-white">Driver</span>
                 <q-select
                   dense
                   outlined
-                  v-model="data.courier_id"
+                  v-model="data.driver_id"
                   use-input
                   hide-selected
                   fill-input
                   :options="filteredNames"
                   :option-value="opt => opt === null ? null : opt.id"
-                  :option-label="opt => opt === null ? '- Null -' : opt.courier_name"
+                  :option-label="opt => opt === null ? '- Null -' : opt.driver_name"
                   emit-value
                   map-options
                   @filter="filterFn"
@@ -64,10 +64,10 @@
                 >
                 <template v-slot:append>
                   <q-icon
-                    v-if="data.courier_id !== ''"
+                    v-if="data.driver_id !== ''"
                     class="cursor-pointer"
                     name="clear"
-                    @click="removeCourier(index)"
+                    @click="removeDriver(index)"
                   />
                 </template>
                 </q-select>
@@ -180,7 +180,7 @@ export default {
         report_data: []
       },
       routes: [],
-      couriers: [],
+      drivers: [],
       filteredNames: [],
       rnc_id: '',
       reportCreatedAt: ''
@@ -194,7 +194,7 @@ export default {
     this.reportForm.report_date = date.formatDate(new Date(), 'YYYY-MM-DD')
     await this.getRNCID()
     await this.getReportInfo(this.reportForm.report_no)
-    await this.getCourierList(this.reportCreatedAt)
+    await this.getDriverList(this.reportCreatedAt)
     // await this.getRegularRoutes()
   },
   methods: {
@@ -218,7 +218,7 @@ export default {
         this.reportForm.report_data = res.data.data.map(data => {
           let reportData = {
             id: data.id,
-            courier_id: data.courier_id,
+            driver_id: data.driver_id,
             route_id: data.route_id,
             route_number: data.route.route_number
           }
@@ -231,21 +231,21 @@ export default {
         this.$router.push('/dashboard/schedules')
       }
     },
-    getCourierList: async function (createdAt) {
+    getDriverList: async function (createdAt) {
       Loading.show()
       try {
-        let res = await api.getCourierList(createdAt)
+        let res = await api.getDriverList(createdAt)
         Loading.hide()
-        this.couriers = res.data.data
-        this.filteredNames = this.couriers
+        this.drivers = res.data.data
+        this.filteredNames = this.drivers
       } catch (e) {
         Loading.hide()
         this.$router.push('/dashboard/schedules')
       }
     },
-    removeCourier (index) {
-      this.reportForm.report_data[index].courier_id = ''
-      this.reportForm.report_data[index].courier_name = ''
+    removeDriver (index) {
+      this.reportForm.report_data[index].driver_id = ''
+      this.reportForm.report_data[index].driver_name = ''
     },
     filterFn (val, update, abort) {
       update(() => {
@@ -253,7 +253,7 @@ export default {
           this.filteredNames = []
         } else {
           const needle = val.toLowerCase()
-          this.filteredNames = this.couriers.filter(name => name.courier_name.toLowerCase().indexOf(needle) > -1)
+          this.filteredNames = this.drivers.filter(name => name.driver_name.toLowerCase().indexOf(needle) > -1)
           this.filteredNames = this.filteredNames.slice(0, 3)
         }
       },
@@ -261,7 +261,7 @@ export default {
         if (val !== '' && ref.options.length > 0) {
           console.log('valll', val)
           // ref.moveOptionSelection(1, true)
-          const matchedName = ref.options.find(item => item.courier_name.toLowerCase() === val.toLowerCase())
+          const matchedName = ref.options.find(item => item.driver_name.toLowerCase() === val.toLowerCase())
           // console.log('matched', matchedName)
           if (matchedName) {
             ref.add(matchedName) // reset optionIndex in case there is something selected
@@ -282,9 +282,9 @@ export default {
     },
     checkDuplicates (val) {
       if (val) {
-        let courierList = this.reportForm.report_data.map((item) => item.courier_id)
-        courierList = courierList.filter((item, index) => item !== '' && item !== 'RNC' && item !== this.rnc_id)
-        let duplicates = courierList.filter((item, index) => item === val && courierList.indexOf(item) !== index)
+        let driverList = this.reportForm.report_data.map((item) => item.driver_id)
+        driverList = driverList.filter((item, index) => item !== '' && item !== 'RNC' && item !== this.rnc_id)
+        let duplicates = driverList.filter((item, index) => item === val && driverList.indexOf(item) !== index)
         if (duplicates.length > 0) return false
         else return true
       } else {
@@ -292,18 +292,18 @@ export default {
       }
     },
     checkEmptyDrivers () {
-      let emptyList = this.reportForm.report_data.filter((item, index) => item.courier_id === '')
+      let emptyList = this.reportForm.report_data.filter((item, index) => item.driver_id === '')
       let emptyRoutes = emptyList.map(item => item.route_number)
       return emptyRoutes
     },
     async addRecords () {
       this.reportForm.report_data = this.reportForm.report_data.map(data => {
         let temp = {}
-        if (!data.courier_id) {
+        if (!data.driver_id) {
           if (data.id) {
             temp.id = data.id
           }
-          temp.courier_id = this.rnc_id
+          temp.driver_id = this.rnc_id
           temp.route_id = data.route_id
         } else {
           temp = data

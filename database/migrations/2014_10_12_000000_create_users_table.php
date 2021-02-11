@@ -22,11 +22,12 @@ class CreateUsersTable extends Migration
       $table->string('phone');
       $table->string('password');
 //      $table->string('company');
-      $table->string('first_name');
-      $table->string('last_name');
+      $table->string('full_name');
       $table->string('zipcode');
-      $table->string('user_type');
-//      $table->tinyInteger('is_active')->default(0);
+      $table->tinyInteger('user_type')->default(0);
+      $table->tinyInteger('is_active')->default(0);
+      $table->integer('parent_id')->unsigned();
+      $table->string('user_roles', 50);
       $table->rememberToken();
       $table->timestamps();
       $table->softDeletes();

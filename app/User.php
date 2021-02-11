@@ -11,8 +11,8 @@ use Laravel\Passport\HasApiTokens;
 class User extends Authenticatable implements MustVerifyEmail{
     use HasApiTokens, SoftDeletes, Notifiable;
 
-//    protected $fillable = ['name', 'avatar', 'email', 'phone', 'password', 'company', 'first_name', 'last_name', 'zipcode', 'user_type', 'is_active'];
-    protected $fillable = ['name', 'email', 'phone', 'password', 'first_name', 'last_name', 'zipcode', 'user_type'];
+//    protected $fillable = ['name', 'avatar', 'email', 'phone', 'password', 'company', 'full_name', 'zipcode', 'user_type', 'is_active'];
+    protected $fillable = ['name', 'email', 'password', 'phone', 'full_name', 'belongs', 'parent_id', 'user_roles', 'zipcode', 'user_type', 'is_active'];
 
     protected $hidden = ['password', 'remember_token'];
 
@@ -22,7 +22,7 @@ class User extends Authenticatable implements MustVerifyEmail{
     public function routes() {
         return $this->hasMany('App\Route');
     }
-    public function couriers() {
-        return $this->hasMany('App\Courier');
+    public function drivers() {
+        return $this->hasMany('App\Driver');
     }
 }

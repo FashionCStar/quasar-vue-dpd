@@ -5,12 +5,12 @@
         <q-table
           :class="is_mobile === 'ios'?'my-sticky-dynamic table-top-ios':is_mobile==='android'?'my-sticky-dynamic table-top-android': 'my-sticky-dynamic'"
           title="DRIVERS"
-          :data="courierList"
+          :data="driverList"
           :columns="userLevel === 'admin' ? columns_admin : columns"
-          row-key="courier_name"
+          row-key="driver_name"
           :pagination.sync="pagination"
           :filter="filter"
-          @request="getCouriers"
+          @request="getDrivers"
           binary-state-sort
           virtual-scroll
           :virtual-scroll-item-size="48"
@@ -34,8 +34,8 @@
           <template v-slot:body="props">
             <q-tr :props="props" @click.native="goToDetail(props.row)">
               <q-td key="no" :props="props">{{ props.row.index }}</q-td>
-              <q-td key="courier_name" :props="props">{{ props.row.courier_name }}</q-td>
-              <q-td v-if="userLevel === 'admin'" key="user_name" :props="props">{{ props.row.user.name }}</q-td>
+              <q-td key="driver_name" :props="props">{{ props.row.driver_name }}</q-td>
+              <q-td v-if="userLevel === 'admin'" key="user_name" :props="props">{{ props.row.user.full_name }}</q-td>
               <!-- <q-td key="buttons" :props="props">
                 <q-btn
                   flat
@@ -98,7 +98,7 @@
               <div class="row justify-between q-col-gutter-md" >
                 <div class="col-12">
                   <span class="text-white">Driver</span>
-                  <q-input dense outlined required color="blue-7" bg-color="white" input-class="text-black text-center" v-model="selectedName.courier_name"></q-input>
+                  <q-input dense outlined required color="blue-7" bg-color="white" input-class="text-black text-center" v-model="selectedName.driver_name"></q-input>
                 </div>
               </div>
               <q-separator />
@@ -169,13 +169,13 @@ import { api } from 'src/boot/api'
 import { Loading } from 'quasar'
 
 export default {
-  name: 'CourierList',
+  name: 'driverList',
   data () {
     return {
       filter: '',
       showDetail: false,
       pagination: {
-        sortBy: 'courier_name',
+        sortBy: 'driver_name',
         descending: false,
         page: 1,
         rowsPerPage: 100,
@@ -183,16 +183,16 @@ export default {
       },
       columns: [
         { name: 'no', required: true, label: 'NO', align: 'left', field: 'no' },
-        { name: 'courier_name', required: true, label: 'COURIER', align: 'left', field: 'courier_name' }
+        { name: 'driver_name', required: true, label: 'DRIVER', align: 'left', field: 'driver_name' }
       ],
       columns_admin: [
         { name: 'no', required: true, label: 'NO', align: 'left', field: 'no' },
-        { name: 'courier_name', required: true, label: 'COURIER', align: 'left', field: 'courier_name' },
+        { name: 'driver_name', required: true, label: 'DRIVER', align: 'left', field: 'driver_name' },
         { name: 'user_name', required: true, label: 'USER', align: 'left', field: 'username' }
       ],
-      courierList: [],
+      driverList: [],
       selectedName: {
-        courier_name: ''
+        driver_name: ''
       },
       dialogTitle: '',
       is_mobile: 'web',
@@ -211,7 +211,7 @@ export default {
     this.checkPlatform()
     // get initial vehicleList from server (1st page)
     this.$store.commit('auth/pageTitle', this.$router.currentRoute.meta.title)
-    this.getCouriers({
+    this.getDrivers({
       pagination: this.pagination,
       filter: undefined
     })
@@ -236,12 +236,12 @@ export default {
         this.isNewRecord = false
         this.dialogTitle = 'Edit Name'
         this.selectedName.id = data.id
-        this.selectedName.courier_name = data.courier_name
+        this.selectedName.driver_name = data.driver_name
       } else {
         this.isNewRecord = true
         this.dialogTitle = 'Add New Name'
         this.selectedName = {
-          courier_name: ''
+          driver_name: ''
         }
       }
       // this.$router.push({ name: 'BuyerDetail', params: { id: id } })
@@ -249,18 +249,18 @@ export default {
     },
     async onScroll ({ index, from, to, ref }) {
       let { page, rowsPerPage, rowsNumber } = this.pagination
-      const lastIndex = this.courierList.length - 1
+      const lastIndex = this.driverList.length - 1
       const lastPage = Math.ceil(rowsNumber / rowsPerPage)
       if (index > 0 && page < lastPage && index === lastIndex) {
         this.pagination.page++
-        await this.getCouriers({
+        await this.getDrivers({
           pagination: this.pagination,
           filter: this.filter,
           isScroll: true
         })
       }
     },
-    getCouriers: async function (props) {
+    getDrivers: async function (props) {
       let { page, rowsPerPage, rowsNumber, sortBy, descending } = props.pagination
       let filter = props.filter
       let isScroll = props.isScroll
@@ -285,7 +285,7 @@ export default {
       // fetch vehicleList from "server"
       Loading.show()
       try {
-        let res = await api.getCouriers(params)
+        let res = await api.getDrivers(params)
         Loading.hide()
 
         res.data.data.forEach((row, index) => {
@@ -293,9 +293,9 @@ export default {
         })
         // clear out existing vehicleList and add new
         if (isScroll) {
-          this.courierList = this.courierList.concat(res.data.data)
+          this.driverList = this.driverList.concat(res.data.data)
         } else {
-          this.courierList = res.data.data
+          this.driverList = res.data.data
         }
         // update rowsCount with appropriate value
         this.pagination.rowsNumber = res.data.totalCount
@@ -325,7 +325,7 @@ export default {
         }
         Loading.show()
         try {
-          let res = await api.updateCourier(params)
+          let res = await api.updateDriver(params)
           Loading.hide()
           console.log('result', res.data)
         } catch (error) {
@@ -336,7 +336,7 @@ export default {
       } else {
         Loading.show()
         try {
-          let res = await api.createCourier(params)
+          let res = await api.createDriver(params)
           Loading.hide()
           console.log('result', res.data)
         } catch (error) {
@@ -345,7 +345,7 @@ export default {
         }
         this.cancelDetail()
       }
-      this.getCouriers({
+      this.getDrivers({
         pagination: this.pagination,
         filter: undefined
       })
@@ -354,7 +354,7 @@ export default {
       // Confirm Remove Vehicle
       this.$q.dialog({
         title: 'Confirm',
-        message: 'Are you surely remove ' + this.selectedName.courier_name + '?',
+        message: 'Are you surely remove ' + this.selectedName.driver_name + '?',
         cancel: true,
         persistent: true,
         color: 'blue-7'
@@ -366,16 +366,16 @@ export default {
         }
         Loading.show()
         try {
-          let res = await api.removeCourier(params)
+          let res = await api.removeDriver(params)
           Loading.hide()
           console.log('remove result', res)
           this.$q.notify({
             color: 'positive',
             position: 'top',
-            message: this.selectedName.courier_name + ' is removed successfully !'
+            message: this.selectedName.driver_name + ' is removed successfully !'
           })
           this.cancelDetail()
-          this.getCouriers({
+          this.getDrivers({
             pagination: this.pagination,
             filter: undefined
           })

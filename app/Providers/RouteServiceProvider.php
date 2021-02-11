@@ -39,6 +39,8 @@ class RouteServiceProvider extends ServiceProvider
 
         $this->mapWebRoutes();
 
+        $this->mapDriverRoutes();
+
         //
     }
 
@@ -67,6 +69,14 @@ class RouteServiceProvider extends ServiceProvider
     {
         Route::prefix('api')
              ->middleware('api')
+             ->namespace($this->namespace)
+             ->group(base_path('routes/api.php'));
+    }
+
+    protected function mapDriverRoutes()
+    {
+        Route::prefix('driver')
+             ->middleware('driver')
              ->namespace($this->namespace)
              ->group(base_path('routes/api.php'));
     }

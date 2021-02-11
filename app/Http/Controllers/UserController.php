@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\ConfirmUserMail;
+use App\Mail\RegisterUserMail;
+use App\Mail\ActiveUserMail;
+use App\Mail\DeactiveUserMail;
 use App\User;
 use App\Mail\VerifyMail;
 use Mail;
@@ -20,84 +22,125 @@ class UserController extends Controller
   public function login()
   {
     $credentials = [
-      'name' => request('name'),
+      'email' => request('email'),
       'password' => request('password')
     ];
 
-    if (Auth::attempt($credentials)) {
-      $user = User::find(Auth::id());
-      return response()->json($this->successResponse($user), 200);
+    if (Auth::validate($credentials)) {
+      $user = Auth::getLastAttempted();
+      if ($user->is_active) {
+        Auth::login($user);
+        $user = User::find(Auth::id());
+        return response()->json($this->successResponse($user), 200, [], JSON_NUMERIC_CHECK);
+      } else {
+        return response()->json([
+          'error' => 'Unauthorised',
+          'message' => 'You are not activated by Admin'
+        ], 401);
+      }
+      // if (Auth::attempt($credentials)) {
+      //   $user = User::find(Auth::id());
+      //   return response()->json($this->successResponse($user), 200);
+      // }
+    } else {
+      return response()->json([
+        'error' => 'Unauthorised',
+        'message' => 'Wrong E-Mail or Password.'
+      ], 404);
     }
-
-    return response()->json([
-      'error' => 'Unauthorised',
-      'message' => 'Wrong username or password.'
-    ], 404);
   }
 
   public function register(Request $request)
   {
-    $loggedUser = Auth::user();
-    if (!$loggedUser->user_type) {
-      $validator = Validator::make($request->all(), [
-        'name' => 'required',
-        'email' => 'required|email',
-        'password' => 'required',
-      ]);
+    $validator = Validator::make($request->all(), [
+      'name' => 'required',
+      'email' => 'required|email',
+      'password' => 'required',
+    ]);
 
-      if ($validator->fails()) {
-        return response()->json(['message'=>'User Info is not correct, Please check again','error' => $validator->errors()], 401);
-      }
-
-      $input = $request->all();
-      $input['password'] = bcrypt($input['password']);
-
-      $user = User::create($input);
-      $successUser = $this->successResponse($user);
-      // $this->sendConfirmEmail($user->email, $successUser['token']);
-      return response()->json(['success' => $successUser], 200);
-    } else {
-      return response()->json(['failed'=>'Logged in User is not Admin'], 401);
+    if ($validator->fails()) {
+      return response()->json(['message'=>'User Info is not correct, Please check again','error' => $validator->errors()], 401);
     }
+    $loggedUser = Auth::user();
+    if (!$loggedUser) {
+      $parent_id = User::where('user_type', 0)->get()[0]->id;
+    } else {
+      $parent_id = $loggedUser->id;
+    }
+    
+    $input = $request->all();
+    $input['password'] = bcrypt($input['password']);
+    $input['parent_id'] = $parent_id;
+    $user = User::create($input);
+    $successUser = $this->successResponse($user);
+    $this->sendRegisterEmail('lukas.tarutis@gmail.com', $user->email);
+    return response()->json(['success' => $successUser], 200, [], JSON_NUMERIC_CHECK);
+    // } else {
+    //   return response()->json(['failed'=>'Logged in User is not Admin'], 401);
+    // }
   }
 
   public function updateUser(Request $request)
   {
-    $loggedUser = Auth::user();
-    if (!$loggedUser->user_type) {
-      $validator = Validator::make($request['data'], [
-        'name' => 'required',
-        'email' => 'required|email',
-        'password' => 'required',
-      ]);
+    $validator = Validator::make($request['data'], [
+      'name' => 'required',
+      'email' => 'required|email',
+      'password' => 'required',
+    ]);
 
-      if ($validator->fails()) {
-        return response()->json(['message'=>'User Info is not correct, Please check again','error' => $validator->errors()], 401);
-      }
-
-      $userData = $request['data'];
-      $user_id = $request['conditions']['id'];
-      $userData['password'] = bcrypt($userData['password']);
-      $user = User::find($user_id);
-      $user->update($userData);
-      return response()->json(['success' => 'success', 'user' => $user]);
-    } else {
-      return response()->json(['failed'=>'Logged in User is not Admin'], 401);
+    if ($validator->fails()) {
+      return response()->json(['message'=>'User Info is not correct, Please check again','error' => $validator->errors()], 401);
     }
+    $loggedUser = Auth::user();
+    if (!$loggedUser) {
+      $parent_id = User::where('user_type', 0)->get()[0]->id;
+    } else {
+      $parent_id = $loggedUser->id;
+    }
+    $userData = $request['data'];
+    $user_id = $request['conditions']['id'];
+    $userData['password'] = bcrypt($userData['password']);
+    $userData['parent_id'] = $parent_id;
+    $user_roles = implode(",", $userData['user_roles']);
+    $userData['user_roles'] = $user_roles;
+    $user = User::find($user_id);
+    $user->update($userData);
+    return response()->json(['success' => 'success', 'user' => $user], 200, [], JSON_NUMERIC_CHECK);
   }
   public function removeUser(Request $request) {
     $loggedUser = Auth::user();
     if (!$loggedUser->user_type) {
       $user_id = $request['conditions']['id'];
       User::find($user_id)->delete();
-      return response()->json(['success' => 'success'], 200);
+      return response()->json(['success' => 'success'], 200, [], JSON_NUMERIC_CHECK);
     } else {
       return response()->json(['failed'=>'Logged in User is not Admin'], 401);
     }
   }
 
-  public function sendConfirmEmail($email, $token) {
-    Mail::to($email)->send(new ConfirmUserMail($email, $token));
+  public function sendRegisterEmail($adminEmail, $userEmail) {
+    Mail::to($adminEmail)->send(new RegisterUserMail($userEmail));
+  }
+
+  public function activeUser(Request $request) {
+    $loggedUser = Auth::user();
+    if (!$loggedUser->user_type) {
+      $user_id = $request['conditions']['id'];
+      $is_active = $request['is_active'];
+      $user = User::find($user_id);
+      $user->update(['is_active' => $is_active]);
+      $this->sendActiveEmail($user->email, $is_active);
+      return response()->json(['success' => 'success', 'user' => $user], 200, [], JSON_NUMERIC_CHECK);
+    } else {
+      return response()->json(['failed'=>'Logged in User is not Admin'], 401);
+    }
+  }
+  public function sendActiveEmail($email, $is_active) {
+    if ($is_active) {
+      Mail::to($email)->send(new ActiveUserMail($email));
+    } else {
+      Mail::to($email)->send(new DeactiveUserMail($email));
+    }
   }
 
   public function uploadUserAvatar(Request $request)
@@ -115,7 +158,7 @@ class UserController extends Controller
       return response()->json([
         'success' => 'upload success',
         'path' => $path
-      ], 200);
+      ], 200, [], JSON_NUMERIC_CHECK);
     } else {
       return response()->json([
         'message' => 'Upload failed',
@@ -130,7 +173,7 @@ class UserController extends Controller
     return response()->json([
       'success' => 'User Verification is success',
       'user' => $user
-    ], 200);
+    ], 200, [], JSON_NUMERIC_CHECK);
   }
   public function validateUser(Request $request)
   {
@@ -152,7 +195,7 @@ class UserController extends Controller
         return response()->json(['message' => $validateKeys[$item] . ' ' . $input[$item] . ' is already exist'], 409);
       }
     }
-    return response()->json(['success' => $input]);
+    return response()->json(['success' => $input], 200, [], JSON_NUMERIC_CHECK);
   }
 
   public function sendVerifyEmail(Request $request)
@@ -189,10 +232,10 @@ class UserController extends Controller
     $userData = $request['data'];
     $user = Auth::user();
     $user->update($userData);
-    return response()->json(['success' => 'success', 'user' => $user]);
+    return response()->json(['success' => 'success', 'user' => $user], 200, [], JSON_NUMERIC_CHECK);
   }
 
-  public function getUsers(Request $request) {
+  public function getClients(Request $request) {
     if (Auth::user()->user_type == 0) {
       $start = $request['start'] ? $request['start'] : 0;
       $numPerPage = $request['numPerPage'] ? $request['numPerPage'] : 10;
@@ -201,16 +244,42 @@ class UserController extends Controller
 
       if ($request['conditions'] && $request['conditions']['filter']) {
         $search = $request['conditions']['filter'];
-        $totalCount = count(User::where('user_type', '!=', '0')->where('name', 'like', '%' . $search . '%')->get());
-        $users = User::where('user_type', '!=', '0')->where('name', 'like', '%' . $search . '%')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+        $totalCount = count(User::where('user_type', '1')->where('name', 'like', '%' . $search . '%')->get());
+        $users = User::where('user_type', '1')->where('name', 'like', '%' . $search . '%')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
       } else {
-        $totalCount = count(User::where('user_type', '!=', '0')->get());
-        $users = User::where('user_type', '!=', '0')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+        $totalCount = count(User::where('user_type', '1')->get());
+        $users = User::where('user_type', '1')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
       }
       if ($totalCount == 0) {
         return response()->json(['success'=>'success', 'totalCount' => $totalCount, 'data' => []], 200);
       } else {
-        return response()->json(['success'=>'success', 'totalCount' => $totalCount, 'data' => $users], 200);
+        return response()->json(['success'=>'success', 'totalCount' => $totalCount, 'data' => $users], 200, [], JSON_NUMERIC_CHECK);
+      }
+    } else {
+      return response()->json(['failed'=>'failed'], 401);
+    }
+  }
+
+  public function getUsers(Request $request) {
+    if (Auth::user()->user_type < 2) {
+      $start = $request['start'] ? $request['start'] : 0;
+      $numPerPage = $request['numPerPage'] ? $request['numPerPage'] : 10;
+      $sortBy = $request['sortBy'] ? 'users.'.$request['sortBy'] : 'users.name';
+      $desc = $request['descending'] ? 'DESC' : 'ASC';
+
+      $parent_id = Auth::id();
+      $users = User::leftJoin('users as parents', 'users.parent_id', '=', 'parents.id')->where('users.user_type', '2');
+      if ($request['conditions'] && isset($request['conditions']['filter'])) {
+        $search = $request['conditions']['filter'];
+        $users = $users->where('name', 'like', '%' . $search . '%');
+      }
+      $users = $users->where('users.parent_id', $parent_id);
+      $totalCount = count($users->get());
+      $users = $users->select('users.id', 'users.name', 'users.full_name', 'users.email', 'users.phone', 'users.belongs','users.zipcode', 'users.user_roles', 'users.is_active', 'parents.name as parent_username', 'parents.full_name as parent_name')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+      if ($totalCount == 0) {
+        return response()->json(['success'=>'success', 'totalCount' => $totalCount, 'data' => []], 200);
+      } else {
+        return response()->json(['success'=>'success', 'totalCount' => $totalCount, 'data' => $users], 200, [], JSON_NUMERIC_CHECK);
       }
     } else {
       return response()->json(['failed'=>'failed'], 401);
@@ -221,7 +290,7 @@ class UserController extends Controller
     $user_id = Input::get('id');
     try {
       $user = User::find($user_id);
-      return response()->json(['success'=>'success', 'user' => $user], 200);
+      return response()->json(['success'=>'success', 'user' => $user], 200, [], JSON_NUMERIC_CHECK);
     } catch (\Exception $e) {
       return response()->json(['failed'=>'failed'], 401);
     }

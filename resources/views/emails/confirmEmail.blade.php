@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Hi {{$user['first_name']}} {{$user['last_name']}}</title>
+  <title>Hi {{$user['full_name']}}</title>
 </head>
 
 <body>
-<p style="font-size: 24px">Hi {{$user['first_name']}} {{$user['last_name']}}</p>
+<p style="font-size: 24px">Hi {{$user['full_name']}}</p>
 <br/>
 <p style="font-size: 16px;">{{$user['email']}} is trying to signup to takechargenxt.com</p>
 <p style="font-size: 16px;">Please enter the following verification code to verify this signup attempt.</p>

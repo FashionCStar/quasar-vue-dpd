@@ -40,12 +40,14 @@
 
           <template v-slot:body="props">
             <q-tr :props="props" @click.native="goToDetail(props.row.id)">
-              <q-td key="first_name" :props="props">{{ props.row.first_name }}</q-td>
-              <q-td key="last_name" :props="props">{{ props.row.last_name }}</q-td>
+              <q-td key="full_name" :props="props">{{ props.row.full_name }}</q-td>
               <q-td key="name" :props="props">{{ props.row.name }}</q-td>
               <q-td key="email" :props="props">{{ props.row.email }}</q-td>
               <q-td key="phone" :props="props">{{ props.row.phone }}</q-td>
               <q-td key="zipcode" :props="props">{{ props.row.zipcode }}</q-td>
+              <q-td key="location" :props="props">{{ props.row.belongs }}</q-td>
+              <q-td key="parent_name" :props="props">{{ props.row.parent_name }}</q-td>
+              <q-td key="active_status" :props="props">{{ props.row.is_active?'ACTIVATED':'DEACTIVATED' }}</q-td>
               <q-td key="buttons" :props="props">
                 <q-btn
                   flat
@@ -136,12 +138,14 @@ export default {
         rowsNumber: 20
       },
       columns: [
-        { name: 'first_name', required: true, label: 'First Name', align: 'left', field: 'first_name', sortable: true },
-        { name: 'last_name', required: true, label: 'Last Name', align: 'left', field: 'last_name', sortable: true },
-        { name: 'name', required: true, label: 'Name', align: 'left', field: 'name', sortable: true },
-        { name: 'email', required: true, label: 'Email', align: 'center', field: 'email', sortable: true },
-        { name: 'phone', required: true, label: 'Phone', align: 'center', field: 'phone', sortable: true },
-        { name: 'zipcode', required: true, label: 'Zipcode', align: 'center', field: 'zipcode', sortable: true },
+        { name: 'full_name', required: true, label: 'Full Name', align: 'left', field: 'full_name', sortable: false },
+        { name: 'name', required: true, label: 'Name', align: 'left', field: 'name', sortable: false },
+        { name: 'email', required: true, label: 'Email', align: 'center', field: 'email', sortable: false },
+        { name: 'phone', required: true, label: 'Phone', align: 'center', field: 'phone', sortable: false },
+        { name: 'zipcode', required: true, label: 'Zipcode', align: 'center', field: 'zipcode', sortable: false },
+        { name: 'location', required: true, label: 'Location', align: 'center', field: 'location', sortable: false },
+        { name: 'parent_name', required: true, label: 'Parent Name', align: 'center', field: 'parent_name', sortable: false },
+        { name: 'active_status', required: true, label: 'Active Status', align: 'center', field: 'active_status', sortable: false },
         { name: 'buttons', label: '', field: 'buttons' }
       ],
       userList: [],

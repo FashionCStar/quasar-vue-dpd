@@ -1,15 +1,15 @@
 <template>
-  <div id="bgImage">
-    <div class="q-pa-md text-center" style="margin-top: 67px;">
+  <div id="bgImage" style="display:flex">
+    <div class="q-pa-md text-center" style="margin: auto">
       <q-form
         @submit="registerUser"
-        class="text-center q-pa-md shadow-3 bg-white q-mx-auto"
-        style="max-width: 700px; border-radius: 10px;"
+        class="text-center q-pa-md q-mx-auto"
+        style="max-width: 600px; border-radius: 10px; background-color: #42424296"
       >
+        <div class="q-my-md" >
+          <img :src="require('../../assets/images/ukcourier_logo.svg')" style="max-height:60px; width: 100%" />
+        </div>
         <div class="row justify-between q-col-gutter-md" >
-          <div class="col-12 q-py-md">
-            <q-img :src="require('../../assets/images/logo.png')" contain style="height: 80px"></q-img>
-          </div>
           <!--<div class="col-12 row items-center justify-center">-->
             <!--<q-uploader-->
               <!--color="teal"-->
@@ -24,35 +24,38 @@
             <!--/>-->
           <!--</div>-->
           <div class="col-12 col-sm-6">
-            <q-input outlined dense required label="First Name" color="cyan-7" v-model="user.first_name"></q-input>
+            <q-input outlined rounded borderless dense label-color="black" color="white" bg-color="white" required placeholder="Full Name" v-model="user.full_name"></q-input>
           </div>
           <div class="col-12 col-sm-6">
-            <q-input outlined dense required label="Last Name" color="cyan-7" v-model="user.last_name"></q-input>
+            <q-input outlined rounded borderless dense label-color="black" color="white" bg-color="white" required placeholder="Company" v-model="user.belongs"></q-input>
           </div>
           <div class="col-12 col-sm-6">
-            <q-input outlined dense required label="Username" color="cyan-7" v-model="user.name"></q-input>
+            <q-input outlined rounded borderless dense label-color="black" color="white" bg-color="white" placeholder="Username" v-model="user.name"></q-input>
           </div>
           <div class="col-12 col-sm-6">
-            <q-input outlined dense required label="Email" type="email" color="cyan-7" v-model="user.email"></q-input>
+            <q-input outlined rounded borderless dense label-color="black" color="white" bg-color="white" placeholder="Email" type="email" v-model="user.email"></q-input>
           </div>
           <div class="col-12 col-sm-6">
-            <q-input outlined dense required label="Mobile Phone" color="cyan-7" v-model="user.phone"></q-input>
+            <q-input outlined rounded borderless dense label-color="black" color="white" bg-color="white" required placeholder="Mobile Phone" v-model="user.phone"></q-input>
           </div>
           <div class="col-12 col-sm-6">
-            <q-input outlined dense required label="Zip Code" color="cyan-7" v-model="user.zipcode"></q-input>
+            <q-input outlined rounded borderless dense label-color="black" color="white" bg-color="white" required placeholder="Zip Code" v-model="user.zipcode"></q-input>
           </div>
           <div class="col-12 col-sm-6">
             <base-text-field
               outlined
-              required
+              rounded
+              borderless
               dense
-              color="cyan-7"
+              label-color="black"
+              color="white"
+              bg-color="white"
               v-model="user.password"
               normalize-bottom
-              label="Password"
+              placeholder="Password"
               icon="mdi-card"
               clearable
-              class="q-ml-none"
+              class="q-ml-none q-pb-none"
               type="password"
               hide-show-password
             >
@@ -64,15 +67,18 @@
           <div class="col-12 col-sm-6">
             <base-text-field
               outlined
-              required
+              rounded
+              borderless
               dense
-              color="cyan-7"
+              label-color="black"
+              color="white"
+              bg-color="white"
               v-model="user.confirmPassword"
               normalize-bottom
-              label="Confirm Password"
+              placeholder="Confirm Password"
               icon="mdi-card"
               clearable
-              class="q-ml-none"
+              class="q-ml-none q-pb-none"
               type="password"
               :rules="[val => val === user.password  || 'Password is not match']"
               hide-show-password
@@ -82,20 +88,13 @@
               </template>
             </base-text-field>
           </div>
-          <div class="col-12 col-sm-2"></div>
-          <div class="col-12 col-sm-8">
-            <q-item tag="label" class="q-ma-none q-pa-none">
-              <q-item-section avatar>
-                <q-toggle color="red" v-model="accept"/>
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>Accept terms and conditions</q-item-label>
-              </q-item-section>
-            </q-item>
-          </div>
-          <div class="col-12 col-sm-2"></div>
           <div class="col-12">
-            <q-btn label="Sign Up" :disable="!accept" type="submit" color="pink-8" class="q-btn--push" style="width:200px; height:50px;"/>
+            <q-btn type="submit" rounded color="blue-7" class="full-width text-white q-mb-md">
+              Sign Up
+            </q-btn>
+            <q-btn :to="{name: 'Login'}" rounded color="blue-7" class="full-width text-white q-mb-md">
+              Sign In
+            </q-btn>
           </div>
         </div>
       </q-form>
@@ -103,14 +102,6 @@
   </div>
 </template>
 
-<style>
-  #bgImage {
-    background: url(../../assets/images/dark-material-bg.jpg) 50% 50% / cover no-repeat;
-    overflow: auto;
-    padding: 2.1rem 0 2.8rem;
-    min-height: 100vh;
-  }
-</style>
 <script>
 import { Loading } from 'quasar'
 import { api } from 'src/boot/api'
@@ -124,9 +115,12 @@ export default {
         confirmPassword: '',
         phone: '',
         email: '',
-        first_name: '',
-        last_name: '',
-        zipcode: ''
+        full_name: '',
+        zipcode: '',
+        is_active: 0,
+        user_type: 1,
+        belongs: '',
+        parent_id: ''
       },
       userAvatar: {},
       accept: false

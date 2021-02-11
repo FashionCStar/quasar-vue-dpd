@@ -62,9 +62,13 @@
               <q-td key="index" :props="props">{{ props.row.index }}</q-td>
               <q-td key="report_date" :props="props" class="text-uppercase">{{ changeDateFormat(props.row.report_date) }}</q-td>
               <q-td key="route_number" :props="props">{{ props.row.route_number }}</q-td>
-              <q-td key="courier_name" :props="props">{{ props.row.courier_name }}</q-td>
+              <q-td key="driver_name" :props="props">{{ props.row.driver_name }}</q-td>
+              <q-td key="pay_type" :props="props">{{ props.row.pay_type === 'fixed' ? 'FIXED' : 'PAY PER STOP' }}</q-td>
+              <q-td key="stops" :props="props">{{ props.row.stops }}</q-td>
+              <q-td key="pay_amount" :props="props">{{ props.row.pay_amount ? '£' +  props.row.pay_amount : '' }}</q-td>
+              <q-td key="vat_percentage" :props="props">{{ props.row.vat_percentage * 100 + '%' }}</q-td>
               <q-td key="is_group" :props="props">{{ props.row.is_group === 1 ? 'DAILY':'EXTRA' }}</q-td>
-              <q-td v-if="userLevel === 'admin'" key="user_name" :props="props">{{ props.row.user.name }}</q-td>
+              <q-td v-if="userLevel === 'admin'" key="user_name" :props="props">{{ props.row.user.full_name }}</q-td>
             </q-tr>
           </template>
 
@@ -160,15 +164,15 @@
                 <q-card-section>
                   <q-select
                     dense
-                    label="Courier"
+                    label="Driver"
                     outlined
-                    v-model="selectedRecord.courier_id"
+                    v-model="selectedRecord.driver_id"
                     use-input
                     hide-selected
                     fill-input
                     :options="filteredNames"
                     :option-value="opt => opt === null ? null : opt.id"
-                    :option-label="opt => opt === null ? '- Null -' : opt.courier_name"
+                    :option-label="opt => opt === null ? '- Null -' : opt.driver_name"
                     emit-value
                     map-options
                     @filter="filterFn"
@@ -269,14 +273,22 @@ export default {
         { name: 'report_date', required: true, label: 'DATE', align: 'left', field: 'report_date' },
         // { name: 'user_name', required: true, label: 'MANAGER', align: 'left', field: 'user_name', sortable: true },
         { name: 'route_number', required: true, label: 'ROUTE', align: 'left', field: 'route_number' },
-        { name: 'courier_name', required: true, label: 'DRIVER', align: 'left', field: 'courier_name' },
+        { name: 'driver_name', required: true, label: 'DRIVER', align: 'left', field: 'driver_name' },
+        { name: 'pay_type', required: true, label: 'PAY TYPE', align: 'left', field: 'pay_type' },
+        { name: 'stops', required: true, label: 'STOPS', align: 'left', field: 'stops' },
+        { name: 'pay_amount', required: true, label: 'PAYMENT', align: 'left', field: 'pay_amount' },
+        { name: 'vat_percentage', required: true, label: 'VAT', align: 'left', field: 'vat_percentage' },
         { name: 'is_group', required: true, label: 'TYPE', align: 'left', field: 'is_group' }
       ],
       columns_admin: [
         { name: 'index', required: true, label: 'NO', align: 'left', field: 'index' },
         { name: 'report_date', required: true, label: 'DATE', align: 'left', field: 'report_date' },
         { name: 'route_number', required: true, label: 'ROUTE', align: 'left', field: 'route_number' },
-        { name: 'courier_name', required: true, label: 'DRIVER', align: 'left', field: 'courier_name' },
+        { name: 'driver_name', required: true, label: 'DRIVER', align: 'left', field: 'driver_name' },
+        { name: 'stops', required: true, label: 'STOPS', align: 'left', field: 'stops' },
+        { name: 'pay_type', required: true, label: 'PAY TYPE', align: 'left', field: 'pay_type' },
+        { name: 'pay_amount', required: true, label: 'PAYMENT', align: 'left', field: 'pay_amount' },
+        { name: 'vat_percentage', required: true, label: 'VAT', align: 'left', field: 'vat_percentage' },
         { name: 'is_group', required: true, label: 'TYPE', align: 'left', field: 'is_group' },
         { name: 'user_name', required: true, label: 'USER', align: 'left', field: 'user_name' }
       ],
@@ -286,13 +298,13 @@ export default {
         id: '',
         report_date: '',
         report_title: '',
-        courier_id: '',
+        driver_id: '',
         route_id: ''
       },
       isNewRecord: false,
       dialogTitle: '',
       routes: [],
-      couriers: [],
+      drivers: [],
       filteredNames: [],
       rnc_id: '',
       is_mobile: 'web',
@@ -355,16 +367,16 @@ export default {
       })
     },
     async goToSingleDetail (data) {
-      await this.getCourierList()
+      await this.getDriverList()
       await this.getExtraRoutes()
       if (data.is_group === 1) {
         this.$router.push({ name: 'Edit Schedule', params: { report_no: data.report_no } })
       } else {
         this.isNewRecord = false
-        this.filteredNames = this.couriers
+        this.filteredNames = this.drivers
         this.dialogTitle = 'Edit Extra Route'
         this.selectedRecord.id = data.id
-        this.selectedRecord.courier_id = data.courier_id
+        this.selectedRecord.driver_id = data.driver_id
         this.selectedRecord.route_id = data.route_id
         this.selectedRecord.report_date = data.report_date
       }
@@ -379,8 +391,8 @@ export default {
     },
     async onSubmit () {
       // this.selectedRecord.report_date = date.formatDate(date.addToDate(this.selectedRecord.report_date, { days: 1 }), 'YYYY-MM-DD')
-      if (!this.selectedRecord.courier_id) {
-        this.selectedRecord.courier_id = 'RNC'
+      if (!this.selectedRecord.driver_id) {
+        this.selectedRecord.driver_id = 'RNC'
       }
       const params = {
         data: this.selectedRecord
@@ -415,12 +427,12 @@ export default {
         // this.$router.push('/dashboard/schedules')
       }
     },
-    getCourierList: async function () {
+    getDriverList: async function () {
       Loading.show()
       try {
-        let res = await api.getCourierList()
+        let res = await api.getDriverList()
         Loading.hide()
-        this.couriers = res.data.data
+        this.drivers = res.data.data
       } catch (e) {
         Loading.hide()
         // this.$router.push('/dashboard/schedules')
@@ -432,13 +444,13 @@ export default {
           this.filteredNames = []
         } else {
           const needle = val.toLowerCase()
-          this.filteredNames = this.couriers.filter(name => name.courier_name.toLowerCase().indexOf(needle) > -1)
+          this.filteredNames = this.drivers.filter(name => name.driver_name.toLowerCase().indexOf(needle) > -1)
           this.filteredNames = this.filteredNames.slice(0, 3)
         }
       },
       ref => {
         if (val !== '' && ref.options.length > 0) {
-          const matchedName = ref.options.find(item => item.courier_name.toLowerCase() === val.toLowerCase())
+          const matchedName = ref.options.find(item => item.driver_name.toLowerCase() === val.toLowerCase())
           if (matchedName) {
             ref.add(matchedName)
           }
@@ -659,7 +671,7 @@ export default {
             )
           } else if (col.field === 'user_name') {
             return wrapCsvValue(
-              row.user.name,
+              row.user.user_name,
               col.format
             )
           } else {

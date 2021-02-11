@@ -16,8 +16,9 @@ class CreateReportsTable extends Migration
         Schema::create('reports', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('user_id')->unsigned();
-            $table->integer('courier_id')->unsigned();
+            $table->integer('driver_id')->unsigned();
             $table->integer('route_id')->unsigned();
+            $table->varchar('stops', 10);
             $table->string('report_title');
             $table->string('report_date');
             $table->string('report_no');

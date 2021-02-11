@@ -85,11 +85,46 @@ const routes = [
             component: () => import('pages/Authentication/profile.vue')
           },
           {
+            path: 'driver-profile',
+            name: 'DriverProfile',
+            meta: {
+              title: 'Profile'
+            },
+            component: () => import('pages/Authentication/driver-profile.vue')
+          },
+          {
+            path: 'clients',
+            name: 'Clients',
+            meta: {
+              title: 'CLIENTS',
+              roles: ['admin']
+            },
+            component: () => import('pages/Dashboard/Admin/client/list.vue')
+          },
+          {
+            path: 'clients/new',
+            name: 'New Client',
+            meta: {
+              title: 'NEW CLIENT',
+              roles: ['admin']
+            },
+            component: () => import('pages/Dashboard/Admin/client/detail.vue')
+          },
+          {
+            path: 'clients/:id/detail',
+            name: 'Client Detail',
+            meta: {
+              title: 'CLIENT DETAIL',
+              roles: ['admin']
+            },
+            component: () => import('pages/Dashboard/Admin/client/detail.vue')
+          },
+          {
             path: 'users',
             name: 'Users',
             meta: {
               title: 'USERS',
-              roles: ['admin']
+              roles: ['admin', 'client']
             },
             component: () => import('pages/Dashboard/Admin/user/list.vue')
           },
@@ -97,8 +132,8 @@ const routes = [
             path: 'users/new',
             name: 'New User',
             meta: {
-              title: 'Create New User',
-              roles: ['admin']
+              title: 'New User',
+              roles: ['admin', 'client']
             },
             component: () => import('pages/Dashboard/Admin/user/detail.vue')
           },
@@ -107,7 +142,7 @@ const routes = [
             name: 'User Detail',
             meta: {
               title: 'User Detail',
-              roles: ['admin']
+              roles: ['admin', 'client']
             },
             component: () => import('pages/Dashboard/Admin/user/detail.vue')
           },
@@ -116,7 +151,7 @@ const routes = [
             name: 'Schedules',
             meta: {
               title: 'SCHEDULE',
-              roles: ['admin', 'user']
+              roles: ['admin', 'user', 'client']
             },
             component: () => import('pages/Dashboard/Admin/reports/list.vue')
           },
@@ -126,7 +161,7 @@ const routes = [
             component: () => import('pages/Dashboard/Admin/reports/create-report.vue'),
             meta: {
               title: 'Create New Schedule',
-              roles: ['admin', 'user']
+              roles: ['admin', 'user', 'client']
             }
           },
           {
@@ -135,7 +170,7 @@ const routes = [
             component: () => import('pages/Dashboard/Admin/reports/edit-report.vue'),
             meta: {
               title: 'Schedule Detail',
-              roles: ['admin', 'user']
+              roles: ['admin', 'user', 'client']
             }
           },
           {
@@ -143,27 +178,72 @@ const routes = [
             name: 'Performance',
             meta: {
               title: 'PERFORMANCE',
-              roles: ['admin', 'user']
+              roles: ['admin', 'user', 'client']
             },
             component: () => import('pages/Dashboard/Admin/reports/monthly-list.vue')
           },
+          {
+            path: 'driver-performance',
+            name: 'Performance',
+            meta: {
+              title: 'PERFORMANCE',
+              roles: ['driver']
+            },
+            component: () => import('pages/Dashboard/Admin/drivers/monthly-list-driver.vue')
+          },
+          // {
+          //   path: 'drivers',
+          //   name: 'Drivers',
+          //   meta: {
+          //     title: 'DRIVERS',
+          //     roles: ['admin', 'user']
+          //   },
+          //   component: () => import('pages/Dashboard/Admin/reports/name-list.vue')
+          // },
           {
             path: 'drivers',
             name: 'Drivers',
             meta: {
               title: 'DRIVERS',
-              roles: ['admin', 'user']
+              roles: ['admin', 'user', 'client']
             },
-            component: () => import('pages/Dashboard/Admin/reports/name-list.vue')
+            component: () => import('pages/Dashboard/Admin/drivers/driver-list.vue')
+          },
+          {
+            path: 'drivers/new',
+            name: 'New Driver',
+            meta: {
+              title: 'NEW DRIVER',
+              roles: ['admin', 'user', 'client']
+            },
+            component: () => import('pages/Dashboard/Admin/drivers/detail.vue')
+          },
+          {
+            path: 'drivers/:id/details',
+            name: 'Driver Details',
+            meta: {
+              title: 'DRIVERS',
+              roles: ['admin', 'user', 'client']
+            },
+            component: () => import('pages/Dashboard/Admin/drivers/detail.vue')
           },
           {
             path: 'routes',
             name: 'Routes',
             meta: {
               title: 'ROUTES',
-              roles: ['admin', 'user']
+              roles: ['admin', 'user', 'client']
             },
             component: () => import('pages/Dashboard/Admin/reports/number-list.vue')
+          },
+          {
+            path: 'locator-search',
+            name: 'LOCATOR',
+            meta: {
+              title: 'LOCATOR',
+              roles: ['admin', 'user', 'client']
+            },
+            component: () => import('pages/Dashboard/Admin/locator/locator_search.vue')
           }
         ]
       }

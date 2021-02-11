@@ -36,7 +36,7 @@
               <q-td key="no" :props="props">{{ props.row.index }}</q-td>
               <q-td key="route_number" :props="props">{{ props.row.route_number }}</q-td>
               <q-td key="route_type" :props="props">{{ !props.row.route_type ? 'DAILY' : 'EXTRA' }}</q-td>
-              <q-td v-if="userLevel === 'admin'" key="user_name" :props="props">{{ props.row.user.name }}</q-td>
+              <q-td v-if="userLevel === 'admin'" key="user_name" :props="props">{{ props.row.user.full_name }}</q-td>
               <!-- <q-td key="buttons" :props="props">
                 <q-btn
                   flat

@@ -12,9 +12,9 @@ class Report extends Model {
     {
         return $this->belongsTo('App\User');
     }
-    public function courier()
+    public function driver()
     {
-        return $this->belongsTo('App\Courier');
+        return $this->belongsTo('App\Driver');
     }
     public function route()
     {

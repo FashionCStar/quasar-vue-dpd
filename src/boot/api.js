@@ -73,8 +73,14 @@ class RestApi {
   async uploadUserAvatar (params, headers) {
     return this.instance.post('/uploadUserAvatar', params, headers)
   }
+  async getClients (params) {
+    return this.instance.post('/getClients', params)
+  }
   async getUsers (params) {
     return this.instance.post('/getUsers', params)
+  }
+  async getClientInfo (id) {
+    return this.instance.get('/getClientDetails?id=' + id)
   }
   async getUserInfo (id) {
     return this.instance.get('/getUserDetails?id=' + id)
@@ -94,6 +100,9 @@ class RestApi {
   async getMonthlyReports (params) {
     return this.instance.post('/getMonthlyReports', params)
   }
+  async getMonthlyReportsByDriver (params) {
+    return this.instance.post('/getMonthlyReportsByDriver', params)
+  }
   async getMonthlyReportsAll (params) {
     return this.instance.post('/getMonthlyReportsAll', params)
   }
@@ -106,23 +115,26 @@ class RestApi {
   async getExtraRoutes () {
     return this.instance.get('/getExtraRoutes')
   }
-  async getCourierList (datetime) {
-    return this.instance.get('/getCourierList?report_datetime=' + datetime)
+  async getDriverList (datetime) {
+    return this.instance.get('/getDriverList?report_datetime=' + datetime)
   }
   async getRNCID () {
     return this.instance.get('/getRNCID')
   }
-  async getCouriers (params) {
-    return this.instance.post('/getCouriers', params)
+  async getDrivers (params) {
+    return this.instance.post('/getDrivers', params)
   }
-  async createCourier (params) {
-    return this.instance.post('/createCourier', params)
+  async getDriverInfo (id) {
+    return this.instance.get('/getDriverDetails?id=' + id)
   }
-  async updateCourier (params) {
-    return this.instance.post('/updateCourier', params)
+  async createDriver (params) {
+    return this.instance.post('/createDriver', params)
   }
-  async removeCourier (params) {
-    return this.instance.post('/removeCourier', params)
+  async updateDriver (params) {
+    return this.instance.post('/updateDriver', params)
+  }
+  async removeDriver (params) {
+    return this.instance.post('/removeDriver', params)
   }
   async getRoutes (params) {
     return this.instance.post('/getRoutes', params)
@@ -155,10 +167,15 @@ class RestApi {
     return this.instance.post('/removeReport', params)
   }
   async registerUser (params) {
-    return this.instance.post('/registerUser', params)
+    return this.instance.post('/register', params)
   }
   async login (params) {
     let response = await this.instance.post('/loginUser', params)
+    this.token = response.data.token
+    return response
+  }
+  async loginDriver (params) {
+    let response = await this.instance.post('/loginDriver', params)
     this.token = response.data.token
     return response
   }
@@ -171,6 +188,15 @@ class RestApi {
   async confirmUser (params, token) {
     this.token = token
     return this.instance.post('/confirmUser', params)
+  }
+  async activeUser (params) {
+    return this.instance.post('/activeUser', params)
+  }
+  async getLocatorResults (params) {
+    return this.instance.post('/getLocatorResults', params)
+  }
+  async convertbng2latlong (params) {
+    return this.instance.get('https://api.getthedata.com/bng2latlong/' + params.northing + '/' + params.easting)
   }
 }
 

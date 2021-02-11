@@ -68,7 +68,7 @@
               <q-td key="no" :props="props">{{ props.row.index }}</q-td>
               <q-td key="report_date" :props="props" class="text-uppercase">{{ changeDateFormat(props.row.report_date) }}</q-td>
               <q-td key="is_group" :props="props">{{ props.row.is_group === 1 ? 'DAILY' : 'EXTRA' }}</q-td>
-              <q-td v-if="userLevel === 'admin'" key="user_name" :props="props">{{ props.row.user.name }}</q-td>
+              <q-td v-if="userLevel === 'admin'" key="full_name" :props="props">{{ props.row.user.full_name }}</q-td>
               <q-td key="buttons" :props="props">
                 <q-btn
                   rounded
@@ -191,21 +191,21 @@
                     </template>
                   </q-input>
                   <q-separator class="q-my-md" color="grey-4" />
-                  <span class="text-white">Courier</span>
+                  <span class="text-white">Driver</span>
                   <q-select
                     dense
                     required
                     outlined
-                    v-model="selectedRecord.courier_id"
+                    v-model="selectedRecord.driver_id"
                     use-input
                     hide-selected
                     fill-input
-                    :options="filteredCourierNames"
+                    :options="filteredDriverNames"
                     :option-value="opt => opt === null ? null : opt.id"
-                    :option-label="opt => opt === null ? '- Null -' : opt.courier_name"
+                    :option-label="opt => opt === null ? '- Null -' : opt.driver_name"
                     emit-value
                     map-options
-                    @filter="filterFnCouriers"
+                    @filter="filterFnDrivers"
                     class="q-mb-xs"
                     behavior="menu"
                     bg-color="white"
@@ -302,41 +302,49 @@
                     </template>
                   </q-input>
                   <q-separator class="q-mt-md" color="grey-4" />
-                  <div v-for="(data, index) in dailyReportForm.report_data" :key="data.route_id" class=" q-pt-md">
-                    <span class="text-white">Courier</span>
+                  <div v-for="(data, index) in dailyReportForm.report_data" :key="data.route_id" class="q-pt-md">
+                    <span class="text-white">Driver</span>
                     <q-select
                       dense
                       outlined
-                      v-model="data.courier_id"
+                      v-model="data.driver_id"
                       use-input
                       hide-selected
                       fill-input
-                      :options="filteredCourierNames"
+                      :options="filteredDriverNames"
                       :option-value="opt => opt === null ? null : opt.id"
-                      :option-label="opt => opt === null ? '- Null -' : opt.courier_name"
+                      :option-label="opt => opt === null ? '- Null -' : opt.driver_name"
                       emit-value
                       map-options
-                      @filter="filterFnCouriers"
+                      @filter="filterFnDrivers"
                       label-color="grey-7"
                       class="q-ma-none q-pb-md"
                       behavior="menu"
                       bg-color="white"
                       input-class="text-black"
-                      :rules="[ val => checkCourierDuplicates(val) || 'This record is duplicated' ]"
+                      :rules="[ val => checkDriverDuplicates(val) || 'This record is duplicated' ]"
                       :hide-dropdown-icon="true"
                       color="blue-7"
                     >
                       <template v-slot:append>
                         <q-icon
-                          v-if="data.courier_id !== ''"
+                          v-if="data.driver_id !== ''"
                           class="cursor-pointer"
                           name="clear"
-                          @click="removeSelectedCourier(index)"
+                          @click="removeSelectedDriver(index)"
                         />
                       </template>
                     </q-select>
-                    <span class="text-white">Route</span>
-                    <q-input required dense outlined bg-color="blue-grey-4" class="q-pb-md" input-class="text-white q-pr-xl" label-color="grey-3" color="blue-7" :value="data.route_number" disable></q-input>
+                    <div class="row">
+                      <div class="col-6 q-pr-sm">
+                        <span class="text-white">Route</span>
+                        <q-input required dense outlined bg-color="blue-grey-4" class="q-pb-md" input-class="text-white q-pr-xl" label-color="grey-3" color="blue-7" :value="data.route_number" disable></q-input>
+                      </div>
+                      <div class="col-6 q-pl-sm">
+                        <span class="text-white">Stops</span>
+                        <q-input dense outlined bg-color="white" class="q-pb-md" input-class="text-black q-pr-xl" label-color="grey-3" color="blue-7" v-model="data.stops"></q-input>
+                      </div>
+                    </div>
                     <q-separator color="grey-4" v-if="index < dailyReportForm.report_data.length-1" />
                   </div>
                 </div>
@@ -484,7 +492,7 @@ export default {
         { name: 'no', required: true, label: 'NO', align: 'left', field: 'no' },
         { name: 'report_date', required: true, label: 'DATE', align: 'left', field: 'report_date' },
         { name: 'is_group', required: true, label: 'TYPE', align: 'left', field: 'is_group' },
-        { name: 'user_name', required: true, label: 'USER', align: 'left', field: 'user_name' },
+        { name: 'full_name', required: true, label: 'USER', align: 'left', field: 'full_name' },
         { name: 'buttons', label: '', field: 'buttons' }
       ],
       reportList: [],
@@ -494,7 +502,7 @@ export default {
         id: '',
         report_date: '',
         report_title: '',
-        courier_id: '',
+        driver_id: '',
         route_id: ''
       },
       dailyReportForm: {
@@ -510,8 +518,8 @@ export default {
       extraRecordTitle: '',
       extraRoutes: [],
       dailyRoutes: [],
-      couriers: [],
-      filteredCourierNames: [],
+      drivers: [],
+      filteredDriverNames: [],
       filteredNames: [],
       is_mobile: 'web',
       rnc_id: '',
@@ -540,7 +548,7 @@ export default {
     })
 
     await this.getRNCID()
-    await this.getCourierList()
+    await this.getDriverList()
     await this.getExtraRoutes()
     await this.getRegularRoutes()
   },
@@ -608,7 +616,7 @@ export default {
             )
           } else if (col.field === 'user_name') {
             return wrapCsvValue(
-              row.user.name,
+              row.user.full_name,
               col.format
             )
           } else if (col.field === 'report_date') {
@@ -650,27 +658,27 @@ export default {
     },
     async goToExtraDetail (data) {
       // await this.getRNCID()
-      // await this.getCourierList()
+      // await this.getDriverList()
       // await this.getExtraRoutes()
       if (data) {
         // if (data.is_group === 1) {
         //   this.$router.push({ name: 'Edit Schedule', params: { report_no: data.report_no } })
         // } else {
         this.isNewExtraRecord = false
-        this.filteredCourierNames = this.couriers
+        this.filteredDriverNames = this.drivers
         this.extraRecordTitle = 'Edit Extra Route'
         this.selectedRecord.id = data.id
-        this.selectedRecord.courier_id = data.courier_id
+        this.selectedRecord.driver_id = data.driver_id
         this.selectedRecord.route_id = data.route_id
         this.selectedRecord.report_date = data.report_date
         this.extraReportDate = date.formatDate(date.extractDate(data.report_date, 'YYYY-MM-DD'), 'DD/MM/YY ddd')
         // }
       } else {
         this.isNewExtraRecord = true
-        this.filteredCourierNames = []
+        this.filteredDriverNames = []
         this.extraRecordTitle = 'Add Extra Route'
         this.selectedRecord.report_date = date.formatDate(new Date(), 'YYYY-MM-DD')
-        this.selectedRecord.courier_id = ''
+        this.selectedRecord.driver_id = ''
         this.selectedRecord.route_id = ''
         this.extraReportDate = date.formatDate(new Date(), 'DD/MM/YY ddd')
       }
@@ -680,31 +688,31 @@ export default {
       if (data) {
         this.isNewDailyRecord = false
         this.dailyRecordTitle = 'Edit Daily Record'
-        this.filteredCourierNames = this.couriers
+        this.filteredDriverNames = this.drivers
         let reportNo = data.report_no
         await this.getReportInfo(reportNo)
         this.dailyReportDate = date.formatDate(date.extractDate(this.dailyReportForm.report_date, 'YYYY-MM-DD'), 'DD/MM/YY ddd')
       } else {
         this.isNewDailyRecord = true
         this.dailyRecordTitle = 'Add Daily Record'
-        this.filteredCourierNames = []
+        this.filteredDriverNames = []
         this.dailyReportDate = date.formatDate(new Date(), 'DD/MM/YY ddd')
         this.dailyReportForm.report_date = date.formatDate(new Date(), 'YYYY-MM-DD')
         this.dailyReportForm.report_data = this.dailyRoutes.map(route => {
-          return { courier_id: '', route_id: route.id, route_number: route.route_number }
+          return { driver_id: '', route_id: route.id, route_number: route.route_number, stops: '' }
         })
       }
       this.showDailyDetail = true
     },
-    removeSelectedCourier (index) {
-      this.dailyReportForm.report_data[index].courier_id = ''
-      // this.dailyReportForm.report_data[index].courier_name = ''
+    removeSelectedDriver (index) {
+      this.dailyReportForm.report_data[index].driver_id = ''
+      // this.dailyReportForm.report_data[index].driver_name = ''
     },
-    checkCourierDuplicates (val) {
+    checkDriverDuplicates (val) {
       if (val) {
-        let courierList = this.dailyReportForm.report_data.map((item) => item.courier_id)
-        courierList = courierList.filter((item, index) => item !== '' && item !== this.rnc_id)
-        let duplicates = courierList.filter((item, index) => item === val && courierList.indexOf(item) !== index)
+        let driverList = this.dailyReportForm.report_data.map((item) => item.driver_id)
+        driverList = driverList.filter((item, index) => item !== '' && item !== this.rnc_id)
+        let duplicates = driverList.filter((item, index) => item === val && driverList.indexOf(item) !== index)
         if (duplicates.length > 0) return false
         else return true
       } else {
@@ -712,7 +720,7 @@ export default {
       }
     },
     checkEmptyDrivers () {
-      let emptyList = this.dailyReportForm.report_data.filter((item, index) => item.courier_id === '')
+      let emptyList = this.dailyReportForm.report_data.filter((item, index) => item.driver_id === '')
       let emptyRoutes = emptyList.map(item => item.route_number)
       return emptyRoutes
     },
@@ -728,9 +736,10 @@ export default {
         this.dailyReportForm.report_data = res.data.data.map(data => {
           let reportData = {
             id: data.id,
-            courier_id: data.courier_id,
+            driver_id: data.driver_id,
             route_id: data.route_id,
-            route_number: data.route.route_number
+            route_number: data.route.route_number,
+            stops: data.stops
           }
           return reportData
         })
@@ -747,7 +756,7 @@ export default {
         id: '',
         report_date: '',
         report_title: '',
-        courier_id: '',
+        driver_id: '',
         route_id: ''
       }
     },
@@ -771,8 +780,8 @@ export default {
     },
     async onSubmitExtra () {
       this.selectedRecord.report_date = date.formatDate(date.extractDate(this.extraReportDate, 'DD/MM/YY ddd'), 'YYYY-MM-DD')
-      if (!this.selectedRecord.courier_id) {
-        this.selectedRecord.courier_id = this.rnc_id
+      if (!this.selectedRecord.driver_id) {
+        this.selectedRecord.driver_id = this.rnc_id
       }
       const params = {
         data: this.selectedRecord
@@ -813,11 +822,11 @@ export default {
     async addDailyRecords () {
       this.dailyReportForm.report_data = this.dailyReportForm.report_data.map(data => {
         let temp = {}
-        if (!data.courier_id) {
+        if (!data.driver_id) {
           if (data.id) {
             temp.id = data.id
           }
-          temp.courier_id = this.rnc_id
+          temp.driver_id = this.rnc_id
           temp.route_id = data.route_id
         } else {
           temp = data
@@ -886,32 +895,32 @@ export default {
         //     return data.route_id === route.id
         //   })
         //   if (!reportData.length) {
-        //     this.reportForm.report_data.push({ courier_id: '', route_id: route.id, route_number: route.route_number })
+        //     this.reportForm.report_data.push({ driver_id: '', route_id: route.id, route_number: route.route_number })
         //   }
         // })
       } catch (e) {
       }
     },
-    getCourierList: async function () {
+    getDriverList: async function () {
       try {
-        let res = await api.getCourierList()
-        this.couriers = res.data.data
+        let res = await api.getDriverList()
+        this.drivers = res.data.data
       } catch (e) {
       }
     },
-    filterFnCouriers (val, update, abort) {
+    filterFnDrivers (val, update, abort) {
       update(() => {
         if (val === '') {
-          this.filteredCourierNames = []
+          this.filteredDriverNames = []
         } else {
           const needle = val.toLowerCase()
-          this.filteredCourierNames = this.couriers.filter(name => name.courier_name.toLowerCase().indexOf(needle) > -1)
-          this.filteredCourierNames = this.filteredCourierNames.slice(0, 3)
+          this.filteredDriverNames = this.drivers.filter(name => name.driver_name.toLowerCase().indexOf(needle) > -1)
+          this.filteredDriverNames = this.filteredDriverNames.slice(0, 3)
         }
       },
       ref => {
         if (val !== '' && ref.options.length > 0) {
-          const matchedName = ref.options.find(item => item.courier_name.toLowerCase() === val.toLowerCase())
+          const matchedName = ref.options.find(item => item.driver_name.toLowerCase() === val.toLowerCase())
           if (matchedName) {
             ref.add(matchedName) // reset optionIndex in case there is something selected
           }

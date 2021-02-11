@@ -20,7 +20,7 @@
 
         <q-toolbar-title>{{pageTitle}}</q-toolbar-title>
         <div class="q-py-sm">
-          <q-btn :to="{name: 'MyProfile'}"
+          <q-btn :to="userLevel !== 'driver' ? {name: 'MyProfile'} : {name: 'DriverProfile'}"
             class="q-px-xs"
             text-color="white"
             style="box-shadow: none;"
@@ -163,6 +163,11 @@ export default {
     pageTitle: {
       get () {
         return this.$store.state.auth.pageTitle
+      }
+    },
+    userLevel: {
+      get () {
+        return this.$store.state.auth.userLevel
       }
     }
   },

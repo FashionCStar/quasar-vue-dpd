@@ -36,12 +36,8 @@
         >
           <q-card style="background-color: #3E444E; box-shadow: none">
             <q-card-section class="text-left q-pb-none">
-              <span class="text-white">First Name</span>
-              <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userForm.first_name"></q-input>
-            </q-card-section>
-            <q-card-section class="text-left q-py-none">
-              <span class="text-white">Last Name</span>
-              <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userForm.last_name"></q-input>
+              <span class="text-white">Name</span>
+              <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userForm.full_name"></q-input>
             </q-card-section>
             <q-card-section class="text-left q-py-none">
               <span class="text-white">Username</span>
@@ -106,8 +102,7 @@ export default {
     return {
       isNewPage: false,
       userForm: {
-        first_name: '',
-        last_name: '',
+        full_name: '',
         name: '',
         phone: '',
         email: '',
