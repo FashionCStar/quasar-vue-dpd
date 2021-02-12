@@ -230,7 +230,7 @@ class ReportController extends Controller
 
   public function getDriverAll(Request $request) {
     if (Auth::user()) {
-      $report_datetime = Input::get('report_datetime');
+      $report_datetime = $request->query()['report_datetime'];
       if (!isset($$report_datetime)) $report_datetime = date('Y-m-d h:i:s');
       $user = Auth::user();
       if ($user->user_type == '0') {
@@ -247,7 +247,7 @@ class ReportController extends Controller
   public function getReportDetails (Request $request) {
     if (Auth::user()) {
       $user_id = Auth::user()->id;
-      $reportNo = Input::get('reportNo');
+      $reportNo = $request->query()['reportNo'];
       try {
         $reports = Report::with(['driver', 'route'])->where('report_no', $reportNo)->get();
         return response()->json(['success' => 'success', 'data' => $reports], 200, [], JSON_NUMERIC_CHECK);

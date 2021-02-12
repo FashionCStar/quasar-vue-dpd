@@ -89,6 +89,8 @@ export default {
   },
   async created () {
     this.$store.commit('auth/pageTitle', this.$router.currentRoute.meta.title)
+
+    this.getLatLng({ northing: '530034', easting: '180381' })
   },
   methods: {
     async moveCenter (marker) {

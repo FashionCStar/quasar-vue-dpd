@@ -76,8 +76,8 @@ class DriverController extends Controller
 
   public function getDriverAll(Request $request) {
     if (Auth::user()) {
-      $report_datetime = Input::get('report_datetime');
-      if (!isset($$report_datetime)) $report_datetime = date('Y-m-d h:i:s');
+      $report_datetime = $request->query()['report_datetime'];
+      if (!isset($report_datetime)) $report_datetime = date('Y-m-d h:i:s');
       $user = Auth::user();
       if ($user->user_type == '0') {
         $drivers = Driver::where('deleted_date', NULL)->orWhere('deleted_date', '>', $report_datetime)->get();
@@ -195,7 +195,7 @@ class DriverController extends Controller
     }
   }
   public function getDriverDetails(Request $request) {
-    $driver_id = Input::get('id');
+    $driver_id = $request->query()['id'];
     try {
       $driver = Driver::find($driver_id);
       return response()->json(['success'=>'success', 'driver' => $driver], 200, [], JSON_NUMERIC_CHECK);

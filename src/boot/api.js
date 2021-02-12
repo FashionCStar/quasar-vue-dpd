@@ -11,7 +11,9 @@ class RestApi {
     this.instance = axios.create({
       baseURL: API_URL,
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Access-Control-Allow-Origin': '*'
       }
     })
   }
@@ -196,8 +198,14 @@ class RestApi {
     return this.instance.post('/getLocatorResults', params)
   }
   async convertbng2latlong (params) {
-    return this.instance.get('https://api.getthedata.com/bng2latlong/' + params.northing + '/' + params.easting)
+    return this.instance.post('/convertbng2latlong', params)
   }
+  // async getLocatorResults (params) {
+  //   return this.instance.post('https://explorer.geowessex.com/plugins/general/core/HeaderBarSearchResults', params)
+  // }
+  // async convertbng2latlong (params) {
+  //   return this.instance.get('https://cors-anywhere.herokuapp.com/https://api.getthedata.com/bng2latlong/' + params.northing + '/' + params.easting)
+  // }
 }
 
 const api = new RestApi()

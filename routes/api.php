@@ -30,6 +30,7 @@ Route::post('/getMonthlyReportsByDriver', 'DriverController@getMonthlyReportsByD
 // });
 
 Route::post('/getLocatorResults', 'LocatorController@getLocatorResults');
+Route::post('/convertbng2latlong', 'LocatorController@convertbng2latlong');
 
 Route::group(['middleware' => 'auth:api'], function () {
   Route::post('/registerUser', 'UserController@register');

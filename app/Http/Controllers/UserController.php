@@ -287,7 +287,7 @@ class UserController extends Controller
   }
 
   public function getUserDetails(Request $request) {
-    $user_id = Input::get('id');
+    $user_id = $request->query()['id'];
     try {
       $user = User::find($user_id);
       return response()->json(['success'=>'success', 'user' => $user], 200, [], JSON_NUMERIC_CHECK);
