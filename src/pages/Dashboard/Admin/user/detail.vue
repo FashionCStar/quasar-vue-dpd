@@ -47,29 +47,29 @@
                   <!--@added="addAvatar"-->
                 <!--/>-->
               <!--</div>-->
-              <q-card-section class="text-left q-pb-none">
+              <!-- <q-card-section class="text-left q-pb-none">
                 <span class="text-white">Name</span>
                 <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userData.full_name"></q-input>
-              </q-card-section>
+              </q-card-section> -->
               <q-card-section class="text-left q-py-none">
-                <span class="text-white">Username</span>
+                <span class="text-white">Full Name</span>
                 <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userData.name"></q-input>
               </q-card-section>
               <q-card-section class="text-left q-py-none">
-                <span class="text-white">Email</span>
-                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userData.email"></q-input>
-              </q-card-section>
-              <q-card-section class="text-left q-py-none">
-                <span class="text-white">Mobile</span>
+                <span class="text-white">Mobile Phone</span>
                 <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userData.phone"></q-input>
               </q-card-section>
               <q-card-section class="text-left q-py-none">
+                <span class="text-white">Depot Location</span>
+                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userData.belongs"></q-input>
+              </q-card-section>
+              <!-- <q-card-section class="text-left q-py-none">
                 <span class="text-white">ZipCode</span>
                 <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userData.zipcode"></q-input>
-              </q-card-section>
+              </q-card-section> -->
               <q-card-section class="text-left q-py-none">
-                <span class="text-white">Location</span>
-                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userData.belongs"></q-input>
+                <span class="text-white">Email</span>
+                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userData.email"></q-input>
               </q-card-section>
               <q-card-section class="text-left q-py-none">
                 <span class="text-white">Password</span>
@@ -195,13 +195,15 @@ export default {
         full_name: '',
         belongs: '',
         zipcode: '',
-        user_type: 1
+        user_type: 2
       },
       userAvatar: {},
       isNewPage: false,
       roleOptions: [
         { label: 'SCHEDULE', value: 'schedules' },
-        { label: 'PERFORMANCE', value: 'performance' }
+        { label: 'PERFORMANCE', value: 'performance' },
+        { label: 'DRIVERS', value: 'drivers' },
+        { label: 'ROUTES', value: 'routes' }
       ]
     }
   },

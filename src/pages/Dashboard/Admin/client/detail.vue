@@ -18,29 +18,53 @@
             style="max-width: 400px; width:100%; margin: auto;"
           >
             <q-card style="background-color: #3E444E; box-shadow: none">
-              <q-card-section class="text-left q-pb-none">
+              <!-- <q-card-section class="text-left q-pb-none">
                 <span class="text-white">Name</span>
                 <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userData.full_name"></q-input>
+              </q-card-section> -->
+              <q-card-section class="text-left q-py-none">
+                <span class="text-white">Full Name</span>
+                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userData.name"></q-input>
               </q-card-section>
               <q-card-section class="text-left q-py-none">
                 <span class="text-white">Company</span>
                 <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userData.belongs"></q-input>
               </q-card-section>
               <q-card-section class="text-left q-py-none">
-                <span class="text-white">Username</span>
-                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userData.name"></q-input>
-              </q-card-section>
-              <q-card-section class="text-left q-py-none">
-                <span class="text-white">Email</span>
-                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userData.email"></q-input>
-              </q-card-section>
-              <q-card-section class="text-left q-py-none">
                 <span class="text-white">Mobile</span>
                 <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userData.phone"></q-input>
               </q-card-section>
               <q-card-section class="text-left q-py-none">
+                <span class="text-white">Sub-Contractor</span>
+                <q-select
+                  outlined
+                  dense
+                  label-color="black"
+                  color="blue-7"
+                  bg-color="white"
+                  class="q-pb-md"
+                  v-model="userData.subcontractor"
+                  :options="subContractors"
+                  emit-value
+                  map-options
+                  required
+                />
+              </q-card-section>
+              <q-card-section class="text-left q-py-none">
+                <span class="text-white">Address</span>
+                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userData.address"></q-input>
+              </q-card-section>
+              <q-card-section class="text-left q-py-none">
                 <span class="text-white">ZipCode</span>
                 <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userData.zipcode"></q-input>
+              </q-card-section>
+              <q-card-section class="text-left q-py-none">
+                <span class="text-white">Country</span>
+                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userData.country"></q-input>
+              </q-card-section>
+              <q-card-section class="text-left q-py-none">
+                <span class="text-white">Email</span>
+                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="userData.email"></q-input>
               </q-card-section>
               <q-card-section class="text-left q-py-none">
                 <span class="text-white">Password</span>
@@ -97,6 +121,7 @@
                     type="submit"
                   /> &nbsp;
                   <q-btn
+                    v-if="!isNewPage == true"
                     no-caps
                     dense
                     rounded
@@ -133,9 +158,16 @@ export default {
         email: '',
         full_name: '',
         belongs: '',
+        country: '',
+        address: '',
         zipcode: '',
-        user_type: 1
+        user_type: 1,
+        is_active: 0,
+        subcontractor: 'DPD'
       },
+      subContractors: [
+        'DPD', 'Other'
+      ],
       userAvatar: {},
       isNewPage: false
     }
@@ -182,9 +214,9 @@ export default {
             color: 'positive',
             textColor: 'white',
             position: 'top',
-            message: 'User is registered successfully'
+            message: 'Client is registered successfully'
           })
-          this.$router.push('/dashboard/users')
+          this.$router.push('/dashboard/clients')
         } catch (error) {
           Loading.hide()
         }
@@ -200,11 +232,17 @@ export default {
           let res = await api.updateUser(params)
           Loading.hide()
           console.log('result', res.data)
+          this.$q.notify({
+            color: 'positive',
+            textColor: 'white',
+            position: 'top',
+            message: 'Client is updated successfully'
+          })
+          this.$router.push('/dashboard/clients')
         } catch (error) {
           Loading.hide()
           console.log('error', error)
         }
-        this.$router.push('/dashboard/users')
       }
     },
     async activeUser () {
@@ -223,9 +261,9 @@ export default {
           color: 'positive',
           textColor: 'white',
           position: 'top',
-          message: !this.userData.is_active ? 'User is activated' : 'User is deactivated'
+          message: !this.userData.is_active ? 'Client is activated' : 'Client is deactivated'
         })
-        this.$router.push('/dashboard/users')
+        this.$router.push('/dashboard/clients')
       } catch (error) {
         Loading.hide()
       }

@@ -71,9 +71,17 @@ class UserController extends Controller
     $input = $request->all();
     $input['password'] = bcrypt($input['password']);
     $input['parent_id'] = $parent_id;
+    if (isset($input['user_roles'])) {
+      $user_roles = implode(",", $input['user_roles']);
+      $input['user_roles'] = $user_roles;
+    } else {
+      $input['user_roles'] = "";
+    }
     $user = User::create($input);
     $successUser = $this->successResponse($user);
-    $this->sendRegisterEmail('lukas.tarutis@gmail.com', $user->email);
+    if ($user['user_type'] == 1) {
+      $this->sendRegisterEmail('lukas.tarutis@gmail.com', $user->email);
+    }
     return response()->json(['success' => $successUser], 200, [], JSON_NUMERIC_CHECK);
     // } else {
     //   return response()->json(['failed'=>'Logged in User is not Admin'], 401);
@@ -101,8 +109,10 @@ class UserController extends Controller
     $user_id = $request['conditions']['id'];
     $userData['password'] = bcrypt($userData['password']);
     $userData['parent_id'] = $parent_id;
-    $user_roles = implode(",", $userData['user_roles']);
-    $userData['user_roles'] = $user_roles;
+    if (isset($userData['user_roles'])) {
+      $user_roles = implode(",", $userData['user_roles']);
+      $userData['user_roles'] = $user_roles;
+    }
     $user = User::find($user_id);
     $user->update($userData);
     return response()->json(['success' => 'success', 'user' => $user], 200, [], JSON_NUMERIC_CHECK);
@@ -244,11 +254,11 @@ class UserController extends Controller
 
       if ($request['conditions'] && $request['conditions']['filter']) {
         $search = $request['conditions']['filter'];
-        $totalCount = count(User::where('user_type', '1')->where('name', 'like', '%' . $search . '%')->get());
-        $users = User::where('user_type', '1')->where('name', 'like', '%' . $search . '%')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+        $totalCount = count(User::where('user_type', 1)->where('name', 'like', '%' . $search . '%')->get());
+        $users = User::where('user_type', 1)->where('name', 'like', '%' . $search . '%')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
       } else {
         $totalCount = count(User::where('user_type', '1')->get());
-        $users = User::where('user_type', '1')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+        $users = User::where('user_type', 1)->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
       }
       if ($totalCount == 0) {
         return response()->json(['success'=>'success', 'totalCount' => $totalCount, 'data' => []], 200);
@@ -268,14 +278,16 @@ class UserController extends Controller
       $desc = $request['descending'] ? 'DESC' : 'ASC';
 
       $parent_id = Auth::id();
-      $users = User::leftJoin('users as parents', 'users.parent_id', '=', 'parents.id')->where('users.user_type', '2');
+      $users = User::leftJoin('users as parents', 'users.parent_id', '=', 'parents.id')->where('users.user_type', 2);
       if ($request['conditions'] && isset($request['conditions']['filter'])) {
         $search = $request['conditions']['filter'];
         $users = $users->where('name', 'like', '%' . $search . '%');
       }
-      $users = $users->where('users.parent_id', $parent_id);
+      if ($parent_id != 1) {
+        $users = $users->where('users.parent_id', $parent_id);
+      }
       $totalCount = count($users->get());
-      $users = $users->select('users.id', 'users.name', 'users.full_name', 'users.email', 'users.phone', 'users.belongs','users.zipcode', 'users.user_roles', 'users.is_active', 'parents.name as parent_username', 'parents.full_name as parent_name')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+      $users = $users->select('users.id', 'users.name', 'users.full_name', 'users.email', 'users.phone', 'users.belongs', 'users.country', 'users.address', 'users.zipcode', 'users.user_roles', 'users.is_active', 'parents.name as parent_username', 'parents.full_name as parent_name')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
       if ($totalCount == 0) {
         return response()->json(['success'=>'success', 'totalCount' => $totalCount, 'data' => []], 200);
       } else {

@@ -20,7 +20,8 @@
 
         <q-toolbar-title>{{pageTitle}}</q-toolbar-title>
         <div class="q-py-sm">
-          <q-btn :to="userLevel !== 'driver' ? {name: 'MyProfile'} : {name: 'DriverProfile'}"
+          <q-btn
+            @click="goToProfile"
             class="q-px-xs"
             text-color="white"
             style="box-shadow: none;"
@@ -176,6 +177,23 @@ export default {
   },
   methods: {
     openURL,
+    goToProfile () {
+      console.log('user level', this.userLevel)
+      switch (this.userLevel) {
+        case 'admin':
+          this.$router.push('/dashboard/admin-profile')
+          break
+        case 'client':
+          this.$router.push('/dashboard/client-profile')
+          break
+        case 'user':
+          this.$router.push('/dashboard/user-profile')
+          break
+        case 'driver':
+          this.$router.push('/dashboard/driver-profile')
+          break
+      }
+    },
     logout () {
       this.$store.commit('auth/token', '')
       this.$store.commit('auth/user', {})

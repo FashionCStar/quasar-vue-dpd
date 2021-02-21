@@ -69,7 +69,7 @@
       clickable
       to="/dashboard/drivers"
       active-class="router--active"
-      v-if="userLevel!=='driver'"
+      v-if="(userLevel!=='driver' && userLevel !== 'user') || checkUserRoles('drivers')"
     >
       <q-item-section avatar>
         <q-icon>
@@ -80,12 +80,12 @@
         <q-item-label>DRIVERS</q-item-label>
       </q-item-section>
     </q-item>
-    <q-separator color="white" v-if="userLevel!=='driver'"/>
+    <q-separator color="white" v-if="(userLevel!=='driver' && userLevel !== 'user') || checkUserRoles('drivers')"/>
     <q-item
       clickable
       to="/dashboard/routes"
       active-class="router--active"
-      v-if="userLevel!=='driver'"
+      v-if="(userLevel!=='driver' && userLevel !== 'user') || checkUserRoles('routes')"
     >
       <q-item-section avatar>
         <q-icon>
@@ -96,7 +96,7 @@
         <q-item-label>ROUTES</q-item-label>
       </q-item-section>
     </q-item>
-    <q-separator color="white" v-if="userLevel!=='driver'"/>
+    <q-separator color="white" v-if="(userLevel!=='driver' && userLevel !== 'user') || checkUserRoles('routes')"/>
     <q-item
       clickable
       to="/dashboard/driver-performance"

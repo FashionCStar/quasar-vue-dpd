@@ -12,26 +12,31 @@
         <div class="q-px-md" style="background-color: #3e444e">
           <div class="q-py-sm">
             <div style="max-width: 400px; position: relative;" class="q-mx-auto">
-              <q-input
-                dense
-                debounce="300"
-                v-model="filter"
-                placeholder="Enter PostCode"
-                input-class="text-white border-white"
-                style="width: 100%"
-                color="blue-7"
-              >
-                <template v-slot:append>
-                  <q-btn icon="search" color="grey" @click="searchLocator(filter)" />
-                </template>
-              </q-input>
+              <div style="display:flex; align-items: center;">
+                <q-input
+                  dense
+                  debounce="300"
+                  v-model="filter"
+                  placeholder="Enter PostCode"
+                  input-class="text-white border-white"
+                  style="width: 90%"
+                  color="blue-7"
+                >
+                  <template v-slot:append>
+                    <q-btn icon="search" color="grey" @click="searchLocator(filter)" />
+                  </template>
+                </q-input>
+                <q-btn icon="close" class="q-ml-xs" style="width: 36px; height: 36px;" size="12px" color="grey" @click="clearMarkers()" />
+              </div>
               <div v-if="locations.length" style="width:100%; position: absolute; z-index: 999;" class="text-right bg-white">
-                <q-btn round size="6px" icon="close" color="red" class="q-mr-sm" @click="resetLocations"/>
-                <q-list separator class="text-left">
-                  <q-item dense clickable v-ripple v-for="location in locations" :key="location.name" @click="showMarker(location)">
-                    <q-item-section>{{location.name}}</q-item-section>
-                  </q-item>
-                </q-list>
+                <q-scroll-area style="height: calc(100vh - 200px); max-height: 600px;">
+                  <q-btn round size="6px" icon="close" color="red" class="q-mr-sm" @click="resetLocations"/>
+                  <q-list separator class="text-left">
+                    <q-item dense clickable v-ripple v-for="location in locations" :key="location.name" @click="showMarker(location)">
+                      <q-item-section>{{location.name}}</q-item-section>
+                    </q-item>
+                  </q-list>
+                </q-scroll-area>
               </div>
             </div>
           </div>
@@ -42,11 +47,16 @@
             id="map"
           >
             <gmap-marker
+              :position="mylocation"
+              @click="moveCenter(mylocation)"
+              :icon="{url: require('../../../../assets/images/icons/my-location-marker.png'), size: {width: 30, height: 30, f: 'px', b: 'px',}, scaledSize: {width: 30, height: 30, f: 'px', b: 'px',}}"
+            ></gmap-marker>
+            <gmap-marker
               :key="index"
               v-for="(marker, index) in markers"
               :position="marker.position"
               :label="marker.label"
-              @click="moveCenter(marker)"
+              @click="moveCenter(marker.position)"
             ></gmap-marker>
           </gmap-map>
         </div>
@@ -72,16 +82,10 @@ export default {
     return {
       filter: '',
       zoom: 5,
-      center: {
-        lat: 51.507407,
-        lng: 0.127724
-      },
-      marker: {
-        lat: 51.507407,
-        lng: 0.127724
-      },
+      center: {},
       markers: [],
-      locations: []
+      locations: [],
+      mylocation: {}
     }
   },
   computed: {
@@ -89,20 +93,12 @@ export default {
   },
   async created () {
     this.$store.commit('auth/pageTitle', this.$router.currentRoute.meta.title)
-
-    this.getLatLng({ northing: '530034', easting: '180381' })
+    this.getCurrentPosition()
   },
   methods: {
-    async moveCenter (marker) {
-      this.center = marker.position
-      // let geocoder = new this.google.maps.Geocoder()
-      // geocoder.geocode({ 'address': 'Portsmouth, UK' }, function (results, status) {
-      //   if (status === this.google.maps.GeocoderStatus.OK) {
-      //     var latitude = results[0].geometry.location.lat()
-      //     var longitude = results[0].geometry.location.lng()
-      //     console.log('lat long', latitude, longitude)
-      //   }
-      // })
+    async moveCenter (position) {
+      this.center = position
+      this.zoom = 10
     },
     async getLatLng (coordinates) {
       let res = await api.convertbng2latlong(coordinates)
@@ -118,10 +114,10 @@ export default {
         const $ = cheerio.load(res.data)
         this.locations = await Promise.all(
           $('a').map(async function (i, item) {
-            let coordinates = $(this).attr('coords_1').split(' ')
+            let coordinates = $(this).attr('coords_1').split(',')[0].split(' ')
             const coords = {
-              northing: coordinates[0],
-              easting: coordinates[1]
+              northing: Math.round(coordinates[0]),
+              easting: Math.round(coordinates[1])
             }
             let latlng = await api.convertbng2latlong(coords)
             const placeInfo = {
@@ -133,10 +129,12 @@ export default {
             return placeInfo
           })
         )
+        this.zoom = 5
       }
     },
     resetLocations () {
       this.locations = []
+      this.zoom = 5
     },
     containsMarker (newMarker) {
       for (let i = 0; i < this.markers.length; i++) {
@@ -151,6 +149,7 @@ export default {
         lat: location.lat,
         lng: location.lng
       }
+      this.zoom = 10
       if (!this.containsMarker(this.center)) {
         let newMarker = {
           position: {
@@ -161,6 +160,35 @@ export default {
         }
         this.markers.push(newMarker)
       }
+      this.locations = []
+    },
+    getCurrentPosition () {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const pos = {
+              lat: Math.round(position.coords.latitude),
+              lng: Math.round(position.coords.longitude)
+            }
+            this.mylocation = pos
+            this.center = pos
+          },
+          () => {
+            this.handleLocationError(true, this.mylocation)
+          }
+        )
+      } else {
+        // Browser doesn't support Geolocation
+        this.handleLocationError(false, this.mylocation)
+      }
+    },
+    handleLocationError (browserHasGeolocation, pos) {
+      console.log('error location')
+    },
+    clearMarkers () {
+      this.markers = []
+      this.center = this.mylocation
+      this.filter = ''
     }
   }
 }

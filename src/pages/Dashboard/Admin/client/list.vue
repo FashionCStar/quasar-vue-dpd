@@ -40,11 +40,13 @@
 
           <template v-slot:body="props">
             <q-tr :props="props" @click.native="goToDetail(props.row.id)">
-              <q-td key="full_name" :props="props">{{ props.row.full_name }}</q-td>
-              <q-td key="company" :props="props">{{ props.row.belongs }}</q-td>
+              <!-- <q-td key="full_name" :props="props">{{ props.row.name }}</q-td> -->
               <q-td key="name" :props="props">{{ props.row.name }}</q-td>
+              <q-td key="company" :props="props">{{ props.row.belongs }}</q-td>
               <q-td key="email" :props="props">{{ props.row.email }}</q-td>
               <q-td key="phone" :props="props">{{ props.row.phone }}</q-td>
+              <q-td key="country" :props="props">{{ props.row.country }}</q-td>
+              <q-td key="address" :props="props">{{ props.row.address }}</q-td>
               <q-td key="zipcode" :props="props">{{ props.row.zipcode }}</q-td>
               <q-td key="active_status" :props="props">{{ props.row.is_active?'ACTIVATED':'DEACTIVATED' }}</q-td>
               <q-td key="buttons" :props="props">
@@ -137,13 +139,15 @@ export default {
         rowsNumber: 20
       },
       columns: [
-        { name: 'full_name', required: true, label: 'Full Name', align: 'left', field: 'full_name', sortable: false },
-        { name: 'name', required: true, label: 'Name', align: 'left', field: 'name', sortable: false },
-        { name: 'email', required: true, label: 'Email', align: 'center', field: 'email', sortable: false },
-        { name: 'phone', required: true, label: 'Phone', align: 'center', field: 'phone', sortable: false },
-        { name: 'zipcode', required: true, label: 'Zipcode', align: 'center', field: 'zipcode', sortable: false },
-        { name: 'company', required: true, label: 'Company', align: 'center', field: 'company', sortable: false },
-        { name: 'active_status', required: true, label: 'Active Status', align: 'center', field: 'active_status', sortable: false },
+        // { name: 'full_name', required: true, label: 'Full Name', align: 'left', field: 'full_name', sortable: false },
+        { name: 'name', required: true, label: 'Full Name', align: 'left', field: 'name', sortable: false },
+        { name: 'company', required: true, label: 'Company', align: 'left', field: 'company', sortable: false },
+        { name: 'email', required: true, label: 'Email', align: 'left', field: 'email', sortable: false },
+        { name: 'phone', required: true, label: 'Phone', align: 'left', field: 'phone', sortable: false },
+        { name: 'country', required: true, label: 'Country', align: 'left', field: 'country', sortable: false },
+        { name: 'address', required: true, label: 'Address', align: 'left', field: 'address', sortable: false },
+        { name: 'zipcode', required: true, label: 'Zipcode', align: 'left', field: 'zipcode', sortable: false },
+        { name: 'active_status', required: true, label: 'Active Status', align: 'left', field: 'active_status', sortable: false },
         { name: 'buttons', label: '', field: 'buttons' }
       ],
       userList: [],

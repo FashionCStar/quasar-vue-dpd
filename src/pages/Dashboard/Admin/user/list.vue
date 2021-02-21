@@ -40,7 +40,7 @@
 
           <template v-slot:body="props">
             <q-tr :props="props" @click.native="goToDetail(props.row.id)">
-              <q-td key="full_name" :props="props">{{ props.row.full_name }}</q-td>
+              <!-- <q-td key="full_name" :props="props">{{ props.row.full_name }}</q-td> -->
               <q-td key="name" :props="props">{{ props.row.name }}</q-td>
               <q-td key="email" :props="props">{{ props.row.email }}</q-td>
               <q-td key="phone" :props="props">{{ props.row.phone }}</q-td>
@@ -138,8 +138,8 @@ export default {
         rowsNumber: 20
       },
       columns: [
-        { name: 'full_name', required: true, label: 'Full Name', align: 'left', field: 'full_name', sortable: false },
-        { name: 'name', required: true, label: 'Name', align: 'left', field: 'name', sortable: false },
+        // { name: 'full_name', required: true, label: 'Full Name', align: 'left', field: 'full_name', sortable: false },
+        { name: 'name', required: true, label: 'Full Name', align: 'left', field: 'name', sortable: false },
         { name: 'email', required: true, label: 'Email', align: 'center', field: 'email', sortable: false },
         { name: 'phone', required: true, label: 'Phone', align: 'center', field: 'phone', sortable: false },
         { name: 'zipcode', required: true, label: 'Zipcode', align: 'center', field: 'zipcode', sortable: false },

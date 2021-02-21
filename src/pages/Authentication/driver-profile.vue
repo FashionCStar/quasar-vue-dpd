@@ -18,9 +18,13 @@
             style="max-width: 400px; width:100%; margin: auto;"
           >
             <q-card style="background-color: #3E444E; box-shadow: none">
-              <q-card-section class="text-left q-pb-none">
+              <!-- <q-card-section class="text-left q-pb-none">
                 <span class="text-white">Name</span>
                 <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="driverForm.full_name"></q-input>
+              </q-card-section> -->
+              <q-card-section class="text-left q-py-none">
+                <span class="text-white">Full Name</span>
+                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="driverForm.driver_name"></q-input>
               </q-card-section>
               <q-card-section class="text-left q-py-none">
                 <span class="text-white">Mobile</span>
@@ -49,10 +53,6 @@
               <q-card-section class="text-left q-py-none">
                 <span class="text-white">Amount</span>
                 <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="driverForm.pay_amount"></q-input>
-              </q-card-section>
-              <q-card-section class="text-left q-py-none">
-                <span class="text-white">Username</span>
-                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="driverForm.driver_name"></q-input>
               </q-card-section>
               <q-card-section class="text-left q-py-none">
                 <span class="text-white">Password</span>

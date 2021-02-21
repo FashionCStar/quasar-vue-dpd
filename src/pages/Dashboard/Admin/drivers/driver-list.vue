@@ -34,7 +34,7 @@
           <template v-slot:body="props">
             <q-tr :props="props" @click.native="goToDetail(props.row.id)">
               <q-td key="no" :props="props">{{ props.row.index }}</q-td>
-              <q-td key="full_name" :props="props">{{ props.row.full_name }}</q-td>
+              <!-- <q-td key="full_name" :props="props">{{ props.row.full_name }}</q-td> -->
               <q-td key="driver_name" :props="props">{{ props.row.driver_name }}</q-td>
               <q-td key="email" :props="props">{{ props.row.email }}</q-td>
               <q-td key="phone" :props="props">{{ props.row.phone }}</q-td>
@@ -190,8 +190,8 @@ export default {
       },
       columns: [
         { name: 'no', required: true, label: 'NO', align: 'left', field: 'no' },
-        { name: 'full_name', required: true, label: 'NAME', align: 'left', field: 'full_name' },
-        { name: 'driver_name', required: true, label: 'USERNAME', align: 'left', field: 'driver_name' },
+        // { name: 'full_name', required: true, label: 'NAME', align: 'left', field: 'full_name' },
+        { name: 'driver_name', required: true, label: 'FULL NAME', align: 'left', field: 'driver_name' },
         { name: 'email', required: true, label: 'EMAIL', align: 'left', field: 'email' },
         { name: 'phone', required: true, label: 'PHONE', align: 'left', field: 'phone' },
         { name: 'pay_type', required: true, label: 'PAYMENT TYPE', align: 'left', field: 'pay_type' },
@@ -201,8 +201,8 @@ export default {
       ],
       columns_admin: [
         { name: 'no', required: true, label: 'NO', align: 'left', field: 'no' },
-        { name: 'full_name', required: true, label: 'NAME', align: 'left', field: 'full_name' },
-        { name: 'driver_name', required: true, label: 'USERNAME', align: 'left', field: 'driver_name' },
+        // { name: 'full_name', required: true, label: 'NAME', align: 'left', field: 'full_name' },
+        { name: 'driver_name', required: true, label: 'FULL NAME', align: 'left', field: 'driver_name' },
         { name: 'email', required: true, label: 'EMAIL', align: 'left', field: 'email' },
         { name: 'phone', required: true, label: 'PHONE', align: 'left', field: 'phone' },
         { name: 'pay_type', required: true, label: 'PAYMENT TYPE', align: 'left', field: 'pay_type' },

@@ -77,12 +77,28 @@ const routes = [
         children: [
           { path: '/', component: () => import('pages/Dashboard/Index.vue') },
           {
-            path: 'my-profile',
-            name: 'MyProfile',
+            path: 'admin-profile',
+            name: 'AdminProfile',
             meta: {
               title: 'Profile'
             },
-            component: () => import('pages/Authentication/profile.vue')
+            component: () => import('pages/Authentication/admin-profile.vue')
+          },
+          {
+            path: 'client-profile',
+            name: 'ClientProfile',
+            meta: {
+              title: 'Profile'
+            },
+            component: () => import('pages/Authentication/client-profile.vue')
+          },
+          {
+            path: 'user-profile',
+            name: 'UserProfile',
+            meta: {
+              title: 'Profile'
+            },
+            component: () => import('pages/Authentication/user-profile.vue')
           },
           {
             path: 'driver-profile',

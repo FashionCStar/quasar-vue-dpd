@@ -31,17 +31,17 @@
                   <!--@added="addAvatar"-->
                 <!--/>-->
               <!--</div>-->
-              <q-card-section class="text-left q-pb-none">
-                <span class="text-white">Name</span>
-                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="driver.full_name"></q-input>
+              <q-card-section class="text-left q-py-none">
+                <span class="text-white">Full Name</span>
+                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="driver.driver_name"></q-input>
               </q-card-section>
+              <!-- <q-card-section class="text-left q-pb-none">
+                <span class="text-white">Full Name</span>
+                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="driver.full_name"></q-input>
+              </q-card-section> -->
               <q-card-section class="text-left q-py-none">
                 <span class="text-white">Mobile</span>
                 <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="driver.phone"></q-input>
-              </q-card-section>
-              <q-card-section class="text-left q-py-none">
-                <span class="text-white">E-Mail</span>
-                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="driver.email"></q-input>
               </q-card-section>
               <q-card-section class="text-left q-py-none row">
                 <div class="col-6">
@@ -50,16 +50,6 @@
                 <div class="col-6">
                   <q-radio v-model="driver.pay_type" val="fixed" label="FIXED RATE" class="q-mx-auto text-white" color="white" keep-color />
                 </div>
-                <!-- <q-option-group
-                  :options="pay_options"
-                  type="radio"
-                  v-model="driver.pay_type"
-                  size="md"
-                  class="q-mx-auto text-white"
-                  color="white"
-                  keep-color
-                  inline
-                /> -->
               </q-card-section>
               <q-card-section class="text-left q-py-none row">
                 <div class="col-6">
@@ -68,24 +58,14 @@
                 <div class="col-6">
                   <q-radio v-model="driver.vat_percentage" :val="0" label="VAT 0.00%" class="q-mx-auto text-white" color="white" keep-color />
                 </div>
-                <!-- <q-option-group
-                  :options="vat_options"
-                  type="radio"
-                  v-model="driver.vat_percentage"
-                  size="md"
-                  class="q-mx-auto text-white"
-                  color="white"
-                  keep-color
-                  inline
-                /> -->
               </q-card-section>
               <q-card-section class="text-left q-py-none">
                 <span class="text-white">Payment</span>
                 <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="driver.pay_amount"></q-input>
               </q-card-section>
               <q-card-section class="text-left q-py-none">
-                <span class="text-white">Username</span>
-                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="driver.driver_name"></q-input>
+                <span class="text-white">E-Mail</span>
+                <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="driver.email"></q-input>
               </q-card-section>
               <q-card-section class="text-left q-py-none">
                 <span class="text-white">Password</span>
