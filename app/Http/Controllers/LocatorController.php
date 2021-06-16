@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 use Throwable;
 use GuzzleHttp\Exception\ClientException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 class LocatorController extends Controller
@@ -43,5 +44,11 @@ class LocatorController extends Controller
             throw new Exception($e->getResponse()->getBody());
         }
         return $res->getBody();
+    }
+    public function getAreaData(Request $request) {
+        $code = $request['code'];
+        $query = "select * from `pc_".strtolower($code).";";
+        $postcodes = DB::select($query);
+        return response()->json(['postcodes' => $postcodes], 200, [], JSON_NUMERIC_CHECK);
     }
 }

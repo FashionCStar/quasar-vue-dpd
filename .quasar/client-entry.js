@@ -266,12 +266,6 @@ import qboot_Quasarquasarappextensionqcalendarsrcbootregisterjs from '@quasar/qu
 
 
 
-Vue.config.devtools = true
-Vue.config.productionTip = false
-
-
-
-console.info('[Quasar] Running SPA.')
 
 
 

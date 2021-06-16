@@ -111,14 +111,17 @@ class RestApi {
   async getReportInfo (reportNo) {
     return this.instance.get('/getReportDetails?reportNo=' + reportNo)
   }
-  async getRegularRoutes () {
-    return this.instance.get('/getRegularRoutes')
+  async getRegularRoutes (depot_id) {
+    return this.instance.get('/getRegularRoutes?depot_id='+depot_id)
   }
-  async getExtraRoutes () {
-    return this.instance.get('/getExtraRoutes')
+  async getExtraRoutes (depot_id) {
+    return this.instance.get('/getExtraRoutes?depot_id='+depot_id)
   }
-  async getDriverList (datetime) {
-    return this.instance.get('/getDriverList?report_datetime=' + datetime)
+  async getDepotList() {
+    return this.instance.get('/getDepotAll')
+  }
+  async getDriverList (depot_id, datetime) {
+    return this.instance.get('/getDriverList?report_datetime=' + datetime + '&depot_id=' + depot_id)
   }
   async getRNCID () {
     return this.instance.get('/getRNCID')
@@ -137,6 +140,18 @@ class RestApi {
   }
   async removeDriver (params) {
     return this.instance.post('/removeDriver', params)
+  }  
+  async getDepots (params) {
+    return this.instance.post('/getDepots', params)
+  }
+  async createDepot (params) {
+    return this.instance.post('/createDepot', params)
+  }
+  async updateDepot (params) {
+    return this.instance.post('/updateDepot', params)
+  }
+  async removeDepot (params) {
+    return this.instance.post('/removeDepot', params)
   }
   async getRoutes (params) {
     return this.instance.post('/getRoutes', params)

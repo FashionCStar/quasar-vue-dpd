@@ -253,14 +253,23 @@ const routes = [
             component: () => import('pages/Dashboard/Admin/reports/number-list.vue')
           },
           {
-            path: 'locator-search',
-            name: 'LOCATOR',
+            path: 'depots',
+            name: 'Depot Locations',
             meta: {
-              title: 'LOCATOR',
+              title: 'DEPOT LOCATIONS',
               roles: ['admin', 'user', 'client']
             },
-            component: () => import('pages/Dashboard/Admin/locator/locator_search.vue')
-          }
+            component: () => import('pages/Dashboard/Admin/reports/depot-list.vue')
+          },
+          // {
+          //   path: 'locator-search',
+          //   name: 'LOCATOR',
+          //   meta: {
+          //     title: 'LOCATOR',
+          //     roles: ['admin', 'user', 'client']
+          //   },
+          //   component: () => import('pages/Dashboard/Admin/locator/locator_search.vue')
+          // }
         ]
       }
     ]

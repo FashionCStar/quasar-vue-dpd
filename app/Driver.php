@@ -12,7 +12,7 @@ class Driver extends Authenticatable {
     use HasApiTokens, Notifiable;
     protected $table = 'drivers';
     protected $guard = 'driver';
-    protected $fillable = ['user_id', 'full_name', 'driver_name', 'email', 'password', 'phone', 'pay_amount', 'pay_type', 'vat_percentage', 'has_access'];
+    protected $fillable = ['user_id', 'depot_id', 'full_name', 'driver_name', 'email', 'password', 'phone', 'pay_amount', 'pay_type', 'vat_percentage', 'has_access'];
     protected $hidden = [
         'password'
     ];
@@ -23,5 +23,9 @@ class Driver extends Authenticatable {
     public function user()
     {
         return $this->belongsTo('App\User');
+    }
+    public function depot()
+    {
+        return $this->belongsTo('App\Depot');
     }
 }

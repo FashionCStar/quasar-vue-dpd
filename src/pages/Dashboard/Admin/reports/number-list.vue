@@ -3,7 +3,13 @@
     <template>
       <div>
         <q-table
-          :class="is_mobile === 'ios'?'my-sticky-dynamic table-top-ios':is_mobile==='android'?'my-sticky-dynamic table-top-android': 'my-sticky-dynamic'"
+          :class="
+            is_mobile === 'ios'
+              ? 'my-sticky-dynamic table-top-ios'
+              : is_mobile === 'android'
+              ? 'my-sticky-dynamic table-top-android'
+              : 'my-sticky-dynamic'
+          "
           title="ROUTES"
           :data="routeList"
           :columns="userLevel === 'admin' ? columns_admin : columns"
@@ -20,11 +26,28 @@
         >
           <template v-slot:top-left>
             <div class="items-center">
-              <q-btn rounded dense no-caps label="+Add Route" color="blue-7" style="width: 168px; height:40px;" @click="goToDetail()" />
+              <q-btn
+                rounded
+                dense
+                no-caps
+                label="+Add Route"
+                color="blue-7"
+                style="width: 168px; height: 40px"
+                @click="goToDetail()"
+              />
             </div>
           </template>
           <template v-slot:top-right>
-            <q-input dense debounce="300" v-model="filter" placeholder="Search" input-class="text-white border-white" style="width: 168px;" color="blue-7" class="q-mb-sm">
+            <q-input
+              dense
+              debounce="300"
+              v-model="filter"
+              placeholder="Search"
+              input-class="text-white border-white"
+              style="width: 168px"
+              color="blue-7"
+              class="q-mb-sm"
+            >
               <template v-slot:append>
                 <q-icon name="search" color="white" />
               </template>
@@ -35,8 +58,14 @@
             <q-tr :props="props" @click.native="goToDetail(props.row)">
               <q-td key="no" :props="props">{{ props.row.index }}</q-td>
               <q-td key="route_number" :props="props">{{ props.row.route_number }}</q-td>
-              <q-td key="route_type" :props="props">{{ !props.row.route_type ? 'DAILY' : 'EXTRA' }}</q-td>
-              <q-td v-if="userLevel === 'admin'" key="user_name" :props="props">{{ props.row.user.full_name }}</q-td>
+              <q-td key="depot_location" :props="props">{{ props.row.depot.depot_location }}</q-td>
+              <q-td key="route_type" :props="props">{{ !props.row.route_type ? "DAILY" : "EXTRA" }}</q-td>
+              <q-td
+                v-if="userLevel === 'admin'"
+                key="user_name"
+                :props="props"
+                >{{ props.row.user.full_name }}</q-td
+              >
               <!-- <q-td key="buttons" :props="props">
                 <q-btn
                   flat
@@ -50,7 +79,7 @@
 
           <template v-slot:bottom="props">
             <div class="col-12 row justify-end items-center">
-              Total Records: {{pagination.rowsNumber}}
+              Total Records: {{ pagination.rowsNumber }}
               <q-btn
                 icon="chevron_left"
                 color="grey-8"
@@ -60,7 +89,14 @@
                 :disable="props.isFirstPage"
                 @click="props.prevPage"
               />
-              <span>{{props.pagination.page}} / {{Math.ceil(props.pagination.rowsNumber / props.pagination.rowsPerPage)}}</span>
+              <span
+                >{{ props.pagination.page }} /
+                {{
+                  Math.ceil(
+                    props.pagination.rowsNumber / props.pagination.rowsPerPage
+                  )
+                }}</span
+              >
               <q-btn
                 icon="chevron_right"
                 color="grey-8"
@@ -80,12 +116,14 @@
         transition-show="scale"
         transition-hide="scale"
       >
-        <q-card style="background-color: #3E444E; max-width: 500px; min-height: 500px">
-          <q-bar style="background-color: #272B33">
+        <q-card
+          style="background-color: #3e444e; max-width: 500px; min-height: 500px"
+        >
+          <q-bar style="background-color: #272b33">
             <q-btn dense flat icon="close" color="white" v-close-popup>
               <q-tooltip content-class="bg-white text-black">Close</q-tooltip>
             </q-btn>
-            <div class="text-h6 text-white">{{dialogTitle}}</div>
+            <div class="text-h6 text-white">{{ dialogTitle }}</div>
           </q-bar>
 
           <q-separator />
@@ -95,13 +133,60 @@
               @submit="onSubmit"
               ref="selectedNumber"
               :model="selectedNumber"
-              style="width: 320px; margin: auto;"
+              style="width: 320px; margin: auto"
             >
-              <div class="row justify-between q-col-gutter-md" >
+              <div class="row justify-between q-col-gutter-md">
                 <div class="col-12">
                   <span class="text-white">Route</span>
-                  <q-input dense outlined required v-model="selectedNumber.route_number" color="blue-7" bg-color="white" input-class="text-black"></q-input>
+                  <q-input
+                    dense
+                    outlined
+                    required
+                    v-model="selectedNumber.route_number"
+                    color="blue-7"
+                    bg-color="white"
+                    input-class="text-black"
+                  ></q-input>
                   <q-separator class="q-my-md" color="grey-4" />
+                  <div
+                    v-if="userLevel === 'admin' || userLevel === 'client'"
+                  >
+                    <span class="text-white">
+                      Depot Location
+                    </span>
+                    <q-select
+                      dense
+                      required
+                      outlined
+                      v-model="selectedNumber.depot_id"
+                      use-input
+                      hide-selected
+                      fill-input
+                      :options="filteredDepots"
+                      :option-value="(opt) => (opt === null ? null : opt.id)"
+                      :option-label="(opt) => opt === null ? '- Null -' : opt.depot_location"
+                      emit-value
+                      map-options
+                      @filter="filterFnDepots"
+                      label-color="grey-7"
+                      class="q-ma-none"
+                      behavior="menu"
+                      bg-color="white"
+                      input-class="text-black"
+                      :hide-dropdown-icon="true"
+                      color="blue-7"
+                    >
+                      <template v-slot:append>
+                        <q-icon
+                          v-if="selectedNumber.depot_id !== ''"
+                          class="cursor-pointer"
+                          name="clear"
+                          @click="removeSelectedDepot()"
+                        />
+                      </template>
+                    </q-select>
+                    <q-separator class="q-my-md" color="grey-4" />
+                  </div>
                   <span class="text-white">Type</span>
                   <q-select
                     dense
@@ -109,13 +194,15 @@
                     outlined
                     v-model="selectedNumber.route_type"
                     :options="route_types"
-                    :option-value="opt => opt === null ? null : opt.value"
-                    :option-label="opt => opt === null ? '- Null -' : opt.label"
+                    :option-value="(opt) => (opt === null ? null : opt.value)"
+                    :option-label="(opt) => (opt === null ? '- Null -' : opt.label)"
                     emit-value
                     map-options
                     class="q-mb-xs"
                     behavior="menu"
-                    color="blue-7" bg-color="white" input-class="text-black"
+                    color="blue-7"
+                    bg-color="white"
+                    input-class="text-black"
                   >
                   </q-select>
                 </div>
@@ -129,7 +216,7 @@
                   label="Delete"
                   color="blue-7"
                   @click="remove"
-                  style="width: 100px; height:40px;"
+                  style="width: 100px; height: 40px"
                 />
                 <q-btn
                   :label="isNewRecord ? 'Add' : 'Update'"
@@ -137,7 +224,7 @@
                   no-caps
                   dense
                   rounded
-                  style="width: 100px; height:40px;"
+                  style="width: 100px; height: 40px"
                   type="submit"
                 />
               </q-card-actions>
@@ -150,240 +237,288 @@
 </template>
 
 <script>
-
-import { api } from 'src/boot/api'
-import { Loading } from 'quasar'
+import { api } from "src/boot/api";
+import { Loading } from "quasar";
 
 export default {
-  name: 'RouteList',
-  data () {
+  name: "RouteList",
+  data() {
     return {
-      filter: '',
+      filter: "",
       showDetail: false,
       pagination: {
-        sortBy: 'route_number',
+        sortBy: "route_number",
         descending: false,
         page: 1,
         rowsPerPage: 100,
-        rowsNumber: 20
+        rowsNumber: 20,
       },
       route_types: [
-        { label: 'DAILY', value: 0 },
-        { label: 'EXTRA', value: 1 }
+        { label: "DAILY", value: 0 },
+        { label: "EXTRA", value: 1 },
       ],
       columns: [
-        { name: 'no', required: true, label: 'NO', align: 'left', field: 'no' },
-        { name: 'route_number', required: true, label: 'ROUTE', align: 'left', field: 'route_number' },
-        { name: 'route_type', required: true, label: 'TYPE', align: 'left', field: 'route_type' }
+        { name: "no", required: true, label: "NO", align: "left", field: "no" },
+        { name: "route_number", required: true, label: "ROUTE", align: "left", field: "route_number", },
+        { name: "depot_location", required: true, label: "DEPOT LOCATION", align: "left", field: "depot_location", },
+        { name: "route_type", required: true, label: "TYPE", align: "left", field: "route_type", },
       ],
       columns_admin: [
-        { name: 'no', required: true, label: 'NO', align: 'left', field: 'no' },
-        { name: 'route_number', required: true, label: 'ROUTE', align: 'left', field: 'route_number' },
-        { name: 'route_type', required: true, label: 'TYPE', align: 'left', field: 'route_type' },
-        { name: 'user_name', required: true, label: 'USER', align: 'left', field: 'user_name' }
+        { name: "no", required: true, label: "NO", align: "left", field: "no" },
+        { name: "route_number", required: true, label: "ROUTE", align: "left", field: "route_number", },
+        { name: "depot_location", required: true, label: "DEPOT LOCATION", align: "left", field: "depot_location", },
+        { name: "route_type", required: true, label: "TYPE", align: "left", field: "route_type", },
+        { name: "user_name", required: true, label: "USER", align: "left", field: "user_name", },
       ],
       routeList: [],
       selectedNumber: {
-        route_number: '',
-        route_type: ''
+        route_number: "",
+        depot_id: "",
+        route_type: "",
       },
-      dialogTitle: '',
-      is_mobile: 'web',
-      isNewRecord: true
-    }
+      dialogTitle: "",
+      is_mobile: "web",
+      isNewRecord: true,
+      depots: [],
+      filteredDepots: []
+    };
   },
-  mounted () {
-    this.checkPlatform()
+  async created() {
+    this.checkPlatform();
     // get initial vehicleList from server (1st page)
-    this.$store.commit('auth/pageTitle', this.$router.currentRoute.meta.title)
+    this.$store.commit("auth/pageTitle", this.$router.currentRoute.meta.title);
+    await this.getDepotList();
+    this.filteredDepots = this.depots;
     this.getRoutes({
       pagination: this.pagination,
-      filter: undefined
-    })
+      filter: undefined,
+    });
   },
   computed: {
     // ...mapFields('commons', ['pageMeta'])
+    user: {
+      get() {
+        return this.$store.state.auth.user;
+      },
+    },
     userLevel: {
-      get () {
-        return this.$store.state.auth.userLevel
-      }
-    }
+      get() {
+        return this.$store.state.auth.userLevel;
+      },
+    },
   },
   methods: {
     // createNew () {
     //   this.$router.push({ name: 'NewNumber' })
     // },
-    checkPlatform () {
+    checkPlatform() {
       if (this.$q.platform.is.mobile) {
         if (this.$q.platform.is.ios) {
-          this.is_mobile = 'ios'
+          this.is_mobile = "ios";
         } else {
-          this.is_mobile = 'android'
+          this.is_mobile = "android";
         }
       } else {
-        this.is_mobile = 'web'
+        this.is_mobile = "web";
       }
     },
-    goToDetail (data) {
+    getDepotList: async function() {
+      try {
+        let res = await api.getDepotList()
+        this.depots = res.data.data
+      } catch (e) {
+      }
+    },
+    goToDetail(data) {
       if (data) {
-        this.isNewRecord = false
-        this.dialogTitle = 'Edit Route'
-        this.selectedNumber.id = data.id
-        this.selectedNumber.route_number = data.route_number
-        this.selectedNumber.route_type = data.route_type
+        this.isNewRecord = false;
+        this.dialogTitle = "Edit Route";
+        this.selectedNumber.id = data.id;
+        this.selectedNumber.route_number = data.route_number;
+        this.selectedNumber.depot_id = data.depot_id;
+        this.selectedNumber.route_type = data.route_type;
       } else {
-        this.isNewRecord = true
-        this.dialogTitle = 'Add Route'
+        this.isNewRecord = true;
+        this.dialogTitle = "Add Route";
         this.selectedNumber = {
-          route_number: '',
-          route_type: ''
-        }
+          route_number: "",
+          depot_id: "",
+          route_type: "",
+        };
       }
       // this.$router.push({ name: 'BuyerDetail', params: { id: id } })
-      this.showDetail = true
+      this.showDetail = true;
     },
-    async onScroll ({ index, from, to, ref }) {
-      let { page, rowsPerPage, rowsNumber } = this.pagination
-      const lastIndex = this.routeList.length - 1
-      const lastPage = Math.ceil(rowsNumber / rowsPerPage)
+    async onScroll({ index, from, to, ref }) {
+      let { page, rowsPerPage, rowsNumber } = this.pagination;
+      const lastIndex = this.routeList.length - 1;
+      const lastPage = Math.ceil(rowsNumber / rowsPerPage);
       if (index > 0 && page < lastPage && index === lastIndex) {
-        this.pagination.page++
+        this.pagination.page++;
         await this.getRoutes({
           pagination: this.pagination,
           filter: this.filter,
-          isScroll: true
-        })
+          isScroll: true,
+        });
       }
     },
     getRoutes: async function (props) {
-      let { page, rowsPerPage, rowsNumber, sortBy, descending } = props.pagination
-      let filter = props.filter
-      let isScroll = props.isScroll
+      let { page, rowsPerPage, rowsNumber, sortBy, descending } =
+        props.pagination;
+      let filter = props.filter;
+      let isScroll = props.isScroll;
 
       // get all rows if "All" (0) is selected
-      let fetchCount = rowsPerPage === 0 ? rowsNumber : rowsPerPage
+      let fetchCount = rowsPerPage === 0 ? rowsNumber : rowsPerPage;
 
       // calculate starting row of driverList
-      let startRow = (page - 1) * rowsPerPage
+      let startRow = (page - 1) * rowsPerPage;
 
       const params = {
         conditions: {},
         start: startRow,
         numPerPage: fetchCount,
         sortBy: sortBy,
-        descending: descending
-      }
+        descending: descending,
+      };
       if (filter) {
-        params.conditions.filter = filter
+        params.conditions.filter = filter;
       }
 
       // fetch vehicleList from "server"
-      Loading.show()
+      Loading.show();
       try {
-        let res = await api.getRoutes(params)
-        Loading.hide()
+        let res = await api.getRoutes(params);
+        Loading.hide();
 
         // clear out existing vehicleList and add new
         res.data.data.forEach((row, index) => {
-          row.index = (page - 1) * 10 + index + 1
-        })
+          row.index = (page - 1) * 10 + index + 1;
+        });
         if (isScroll) {
-          this.routeList = this.routeList.concat(res.data.data)
+          this.routeList = this.routeList.concat(res.data.data);
         } else {
-          this.routeList = res.data.data
+          this.routeList = res.data.data;
         }
         // update rowsCount with appropriate value
-        this.pagination.rowsNumber = res.data.totalCount
+        this.pagination.rowsNumber = res.data.totalCount;
 
         // don't forget to update local pagination object
-        this.pagination.page = page
-        this.pagination.rowsPerPage = rowsPerPage
-        this.pagination.sortBy = sortBy
-        this.pagination.descending = descending
+        this.pagination.page = page;
+        this.pagination.rowsPerPage = rowsPerPage;
+        this.pagination.sortBy = sortBy;
+        this.pagination.descending = descending;
 
         // ...and turn of loading indicator
       } catch (e) {
-        Loading.hide()
-        console.log('errorrrrrrrrrr', e)
+        Loading.hide();
+        console.log("errorrrrrrrrrr", e);
       }
     },
-    cancelDetail () {
-      this.showDetail = false
-      this.selectedNumber = {}
+    cancelDetail() {
+      this.showDetail = false;
+      this.selectedNumber = {};
     },
-    async onSubmit () {
+    async onSubmit() {
+      if (this.userLevel === "user") {
+        this.selectedNumber.depot_id = this.user.depot_id;
+      }
       const params = {
-        data: this.selectedNumber
-      }
+        data: this.selectedNumber,
+      };
       if (this.selectedNumber.id) {
         params.conditions = {
-          id: this.selectedNumber.id
-        }
-        Loading.show()
+          id: this.selectedNumber.id,
+        };
+        Loading.show();
         try {
-          let res = await api.updateRoute(params)
-          Loading.hide()
-          console.log('result', res.data)
+          let res = await api.updateRoute(params);
+          Loading.hide();
+          console.log("result", res.data);
         } catch (error) {
-          Loading.hide()
-          console.log('error', error)
+          Loading.hide();
+          console.log("error", error);
         }
-        this.cancelDetail()
+        this.cancelDetail();
       } else {
-        Loading.show()
+        Loading.show();
         try {
-          let res = await api.createRoute(params)
-          Loading.hide()
-          console.log('result', res.data)
+          let res = await api.createRoute(params);
+          Loading.hide();
+          console.log("result", res.data);
         } catch (error) {
-          Loading.hide()
-          console.log('error', error)
+          Loading.hide();
+          console.log("error", error);
         }
-        this.cancelDetail()
+        this.cancelDetail();
       }
       this.getRoutes({
         pagination: this.pagination,
-        filter: undefined
-      })
+        filter: undefined,
+      });
     },
-    remove () {
+    remove() {
       // Confirm Remove Vehicle
-      this.$q.dialog({
-        title: 'Confirm',
-        message: 'Are you surely remove ' + this.selectedNumber.route_number + '?',
-        cancel: true,
-        persistent: true,
-        color: 'blue-7'
-      }).onOk(async () => {
-        const params = {
-          conditions: {
-            id: this.selectedNumber.id
+      this.$q
+        .dialog({
+          title: "Confirm",
+          message:
+            "Are you surely remove " + this.selectedNumber.route_number + "?",
+          cancel: true,
+          persistent: true,
+          color: "blue-7",
+        })
+        .onOk(async () => {
+          const params = {
+            conditions: {
+              id: this.selectedNumber.id,
+            },
+          };
+          Loading.show();
+          try {
+            let res = await api.removeRoute(params);
+            Loading.hide();
+            console.log("remove result", res);
+            this.$q.notify({
+              color: "positive",
+              position: "top",
+              message:
+                this.selectedNumber.route_number + " is removed successfully !",
+            });
+            this.cancelDetail();
+            this.getRoutes({
+              pagination: this.pagination,
+              filter: undefined,
+            });
+          } catch (e) {
+            Loading.hide();
+          }
+        })
+        .onCancel(() => {})
+        .onDismiss(() => {});
+    },
+    filterFnDepots (val, update, abort) {
+      update(() => {
+        if (val === '') {
+          this.filteredDepots = []
+        } else {
+          const needle = val.toLowerCase()
+          this.filteredDepots = this.depots.filter(depot => depot.depot_location.toLowerCase().indexOf(needle) > -1)
+          this.filteredDepots = this.filteredDepots.slice(0, 3)
+        }
+      },
+      ref => {
+        if (val !== '' && ref.options.length > 0) {
+          const matchedDepot = ref.options.find(item => item.depot_location.toLowerCase() === val.toLowerCase())
+          if (matchedDepot) {
+            ref.add(matchedDepot) // reset optionIndex in case there is something selected
           }
         }
-        Loading.show()
-        try {
-          let res = await api.removeRoute(params)
-          Loading.hide()
-          console.log('remove result', res)
-          this.$q.notify({
-            color: 'positive',
-            position: 'top',
-            message: this.selectedNumber.route_number + ' is removed successfully !'
-          })
-          this.cancelDetail()
-          this.getRoutes({
-            pagination: this.pagination,
-            filter: undefined
-          })
-        } catch (e) {
-          Loading.hide()
-        }
-      }).onCancel(() => {
-      }).onDismiss(() => {
       })
+    },
+    removeSelectedDepot () {
+      this.selectedNumber.depot_id = '';
     }
-  },
-  created () {
   }
-}
+};
 </script>

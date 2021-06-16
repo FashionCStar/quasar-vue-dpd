@@ -165,7 +165,7 @@
 
           <q-separator />
 
-          <q-card-section style="max-height: 50vh" class="scroll">
+          <q-card-section class="scroll">
             <q-form
               @submit="onSubmitExtra"
               ref="selectedRecord"
@@ -190,49 +190,82 @@
                       </q-icon>
                     </template>
                   </q-input>
+                  <div v-if="userLevel === 'admin' || userLevel === 'client'">
+                    <q-separator class="q-my-md" color="grey-4" />
+                    <span class="text-white">Depot Location</span>
+                    <q-select
+                      dense
+                      outlined
+                      v-model="depot_id"
+                      fill-input
+                      :options="depots"
+                      :option-value="(opt) => (opt === null ? null : opt.id)"
+                      :option-label="(opt) => (opt === null ? '- Null -' : opt.depot_location)"
+                      emit-value
+                      map-options
+                      label-color="grey-7"
+                      class="q-ma-none q-pb-md"
+                      behavior="menu"
+                      bg-color="white"
+                      input-class="text-black"
+                      color="blue-7"
+                      @input="changeDepot"
+                    >
+                      <template v-slot:append>
+                        <q-icon
+                          v-if="depot_id !== ''"
+                          class="cursor-pointer"
+                          name="clear"
+                          @click="removeSelectedDepot()"
+                        />
+                      </template>
+                    </q-select>
+                  </div>
                   <q-separator class="q-my-md" color="grey-4" />
-                  <span class="text-white">Driver</span>
-                  <q-select
-                    dense
-                    required
-                    outlined
-                    v-model="selectedRecord.driver_id"
-                    use-input
-                    hide-selected
-                    fill-input
-                    :options="filteredDriverNames"
-                    :option-value="opt => opt === null ? null : opt.id"
-                    :option-label="opt => opt === null ? '- Null -' : opt.driver_name"
-                    emit-value
-                    map-options
-                    @filter="filterFnDrivers"
-                    class="q-mb-xs"
-                    behavior="menu"
-                    bg-color="white"
-                    input-class="text-black"
-                    color="blue-7"
-                    :hide-dropdown-icon="true"
-                  >
-                  </q-select>
-                  <span class="text-white">Route</span>
-                  <q-select
-                    dense
-                    required
-                    outlined
-                    v-model="selectedRecord.route_id"
-                    :options="extraRoutes"
-                    :option-value="opt => opt === null ? null : opt.id"
-                    :option-label="opt => opt === null ? '- Null -' : opt.route_number"
-                    emit-value
-                    map-options
-                    class="q-mb-xs"
-                    behavior="menu"
-                    bg-color="white"
-                    input-class="text-black"
-                    color="blue-7"
-                    :hide-dropdown-icon="true"
-                  >
-                  </q-select>
+                  <div v-if="(depot_id !== '' || userLevel === 'user') && (extraRoutes.length)">
+                    <span class="text-white">Driver</span>
+                    <q-select
+                      dense
+                      required
+                      outlined
+                      v-model="selectedRecord.driver_id"
+                      use-input
+                      hide-selected
+                      fill-input
+                      :options="filteredDriverNames"
+                      :option-value="opt => opt === null ? null : opt.id"
+                      :option-label="opt => opt === null ? '- Null -' : opt.driver_name"
+                      emit-value
+                      map-options
+                      @filter="filterFnDrivers"
+                      class="q-mb-xs"
+                      behavior="menu"
+                      bg-color="white"
+                      input-class="text-black"
+                      color="blue-7"
+                      :hide-dropdown-icon="true"
+                    >
+                    </q-select>
+                    <span class="text-white">Route</span>
+                    <q-select
+                      dense
+                      required
+                      outlined
+                      v-model="selectedRecord.route_id"
+                      :options="extraRoutes"
+                      :option-value="opt => opt === null ? null : opt.id"
+                      :option-label="opt => opt === null ? '- Null -' : opt.route_number"
+                      emit-value
+                      map-options
+                      class="q-mb-xs"
+                      behavior="menu"
+                      bg-color="white"
+                      input-class="text-black"
+                      color="blue-7"
+                      :hide-dropdown-icon="true"
+                    >
+                    </q-select>
+                  </div>
                 </div>
               </div>
               <q-card-actions align="center">
@@ -254,6 +287,7 @@
                   rounded
                   style="width: 100px; height:40px;"
                   type="submit"
+                  :disable="!depot_id || !extraRoutes.length"
                 />
               </q-card-actions>
             </q-form>
@@ -301,51 +335,84 @@
                       </q-icon>
                     </template>
                   </q-input>
-                  <q-separator class="q-mt-md" color="grey-4" />
-                  <div v-for="(data, index) in dailyReportForm.report_data" :key="data.route_id" class="q-pt-md">
-                    <span class="text-white">Driver</span>
+                  <div v-if="userLevel === 'admin' || userLevel === 'client'">
+                    <q-separator class="q-my-md" color="grey-4" />
+                    <span class="text-white">Depot Location</span>
                     <q-select
                       dense
                       outlined
-                      v-model="data.driver_id"
-                      use-input
-                      hide-selected
+                      v-model="depot_id"
                       fill-input
-                      :options="filteredDriverNames"
-                      :option-value="opt => opt === null ? null : opt.id"
-                      :option-label="opt => opt === null ? '- Null -' : opt.driver_name"
+                      :options="depots"
+                      :option-value="(opt) => (opt === null ? null : opt.id)"
+                      :option-label="(opt) => (opt === null ? '- Null -' : opt.depot_location)"
                       emit-value
                       map-options
-                      @filter="filterFnDrivers"
                       label-color="grey-7"
                       class="q-ma-none q-pb-md"
                       behavior="menu"
                       bg-color="white"
                       input-class="text-black"
-                      :rules="[ val => checkDriverDuplicates(val) || 'This record is duplicated' ]"
-                      :hide-dropdown-icon="true"
                       color="blue-7"
+                      @input="changeDepot"
                     >
                       <template v-slot:append>
                         <q-icon
-                          v-if="data.driver_id !== ''"
+                          v-if="depot_id !== ''"
                           class="cursor-pointer"
                           name="clear"
-                          @click="removeSelectedDriver(index)"
+                          @click="removeSelectedDepot()"
                         />
                       </template>
                     </q-select>
-                    <div class="row">
-                      <div class="col-6 q-pr-sm">
-                        <span class="text-white">Route</span>
-                        <q-input required dense outlined bg-color="blue-grey-4" class="q-pb-md" input-class="text-white q-pr-xl" label-color="grey-3" color="blue-7" :value="data.route_number" disable></q-input>
+                  </div>
+                  <q-separator class="q-mt-md" color="grey-4" />
+                  <div v-if="depot_id !== '' || userLevel === 'user'">
+                    <div v-for="(data, index) in dailyReportForm.report_data" :key="data.route_id" class="q-pt-md">
+                      <span class="text-white">Driver</span>
+                      <q-select
+                        dense
+                        outlined
+                        v-model="data.driver_id"
+                        use-input
+                        hide-selected
+                        fill-input
+                        :options="filteredDriverNames"
+                        :option-value="opt => opt === null ? null : opt.id"
+                        :option-label="opt => opt === null ? '- Null -' : opt.driver_name"
+                        emit-value
+                        map-options
+                        @filter="filterFnDrivers"
+                        label-color="grey-7"
+                        class="q-ma-none q-pb-md"
+                        behavior="menu"
+                        bg-color="white"
+                        input-class="text-black"
+                        :rules="[ val => checkDriverDuplicates(val) || 'This record is duplicated' ]"
+                        :hide-dropdown-icon="true"
+                        color="blue-7"
+                      >
+                        <template v-slot:append>
+                          <q-icon
+                            v-if="data.driver_id !== ''"
+                            class="cursor-pointer"
+                            name="clear"
+                            @click="removeSelectedDriver(index)"
+                          />
+                        </template>
+                      </q-select>
+                      <div class="row">
+                        <div class="col-6 q-pr-sm">
+                          <span class="text-white">Route</span>
+                          <q-input required dense outlined bg-color="blue-grey-4" class="q-pb-md" input-class="text-white q-pr-xl" label-color="grey-3" color="blue-7" :value="data.route_number" disable></q-input>
+                        </div>
+                        <div class="col-6 q-pl-sm">
+                          <span class="text-white">Stops</span>
+                          <q-input dense outlined bg-color="white" class="q-pb-md" input-class="text-black q-pr-xl" label-color="grey-3" color="blue-7" v-model="data.stops"></q-input>
+                        </div>
                       </div>
-                      <div class="col-6 q-pl-sm">
-                        <span class="text-white">Stops</span>
-                        <q-input dense outlined bg-color="white" class="q-pb-md" input-class="text-black q-pr-xl" label-color="grey-3" color="blue-7" v-model="data.stops"></q-input>
-                      </div>
+                      <q-separator color="grey-4" v-if="index < dailyReportForm.report_data.length-1" />
                     </div>
-                    <q-separator color="grey-4" v-if="index < dailyReportForm.report_data.length-1" />
                   </div>
                 </div>
               </div>
@@ -369,6 +436,7 @@
                     rounded
                     style="width: 100px; height:40px"
                     type="submit"
+                    :disable="!depot_id || !dailyRoutes.length"
                   />
                 </div>
               </q-card-actions>
@@ -524,7 +592,9 @@ export default {
       is_mobile: 'web',
       rnc_id: '',
       isDateFilter: false,
-      showEmptyConfirm: false
+      showEmptyConfirm: false,
+      depot_id: '',
+      depots: []
     }
   },
   computed: {
@@ -548,9 +618,13 @@ export default {
     })
 
     await this.getRNCID()
-    await this.getDriverList()
-    await this.getExtraRoutes()
-    await this.getRegularRoutes()
+    if (this.userLevel === 'user') {
+      await this.getDriverList()
+      await this.getExtraRoutes()
+      await this.getRegularRoutes()
+    } else {
+      await this.getDepotList()
+    }
   },
   methods: {
     // createNew () {
@@ -680,6 +754,7 @@ export default {
         this.selectedRecord.report_date = date.formatDate(new Date(), 'YYYY-MM-DD')
         this.selectedRecord.driver_id = ''
         this.selectedRecord.route_id = ''
+        this.depot_id = ''
         this.extraReportDate = date.formatDate(new Date(), 'DD/MM/YY ddd')
       }
       this.showExtraDetail = true
@@ -696,6 +771,7 @@ export default {
         this.isNewDailyRecord = true
         this.dailyRecordTitle = 'Add Daily Record'
         this.filteredDriverNames = []
+        this.depot_id = ''
         this.dailyReportDate = date.formatDate(new Date(), 'DD/MM/YY ddd')
         this.dailyReportForm.report_date = date.formatDate(new Date(), 'YYYY-MM-DD')
         this.dailyReportForm.report_data = this.dailyRoutes.map(route => {
@@ -828,6 +904,7 @@ export default {
           }
           temp.driver_id = this.rnc_id
           temp.route_id = data.route_id
+          temp.stops = data.stops
         } else {
           temp = data
         }
@@ -878,18 +955,21 @@ export default {
         this.addDailyRecords()
       }
     },
-    getExtraRoutes: async function () {
+    getExtraRoutes: async function (depot_id) {
       try {
-        let res = await api.getExtraRoutes()
+        let res = await api.getExtraRoutes(depot_id)
         this.extraRoutes = res.data.data
       } catch (e) {
         // this.$router.push('/dashboard/schedules')
       }
     },
-    getRegularRoutes: async function () {
+    getRegularRoutes: async function (depot_id) {
       try {
-        let res = await api.getRegularRoutes()
+        let res = await api.getRegularRoutes(depot_id)
         this.dailyRoutes = res.data.data
+        this.dailyReportForm.report_data = this.dailyRoutes.map(route => {
+          return { driver_id: '', route_id: route.id, route_number: route.route_number, stops: '' }
+        })
         // this.dailyRoutes.forEach((route, index) => {
         //   let reportData = this.reportForm.report_data.filter(data => {
         //     return data.route_id === route.id
@@ -901,12 +981,22 @@ export default {
       } catch (e) {
       }
     },
-    getDriverList: async function () {
+    getDriverList: async function (depot_id) {
       try {
-        let res = await api.getDriverList()
+        let res = await api.getDriverList(depot_id)
         this.drivers = res.data.data
       } catch (e) {
       }
+    },
+    getDepotList: async function() {
+      try {
+        let res = await api.getDepotList()
+        this.depots = res.data.data
+      } catch (e) {
+      }
+    },
+    removeSelectedDepot () {
+      this.depot_id = '';
     },
     filterFnDrivers (val, update, abort) {
       update(() => {
@@ -1068,6 +1158,11 @@ export default {
       }).onCancel(() => {
       }).onDismiss(() => {
       })
+    },
+    async changeDepot () {      
+      await this.getDriverList(this.depot_id)
+      await this.getExtraRoutes(this.depot_id)
+      await this.getRegularRoutes(this.depot_id)
     }
   },
   created () {

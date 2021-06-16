@@ -43,6 +43,43 @@
                 <span class="text-white">Mobile</span>
                 <q-input dense outlined required bg-color="white" color="blue-7" class="q-pb-md" input-class="text-black text-center" v-model="driver.phone"></q-input>
               </q-card-section>
+              <q-card-section
+                v-if="userLevel === 'admin' || userLevel === 'client'"
+                class="text-left q-py-none"
+              >
+                <span class="text-white">Depot Location</span>
+                <q-select
+                  dense
+                  required
+                  outlined
+                  v-model="driver.depot_id"
+                  use-input
+                  hide-selected
+                  fill-input
+                  :options="filteredDepots"
+                  :option-value="(opt) => (opt === null ? null : opt.id)"
+                  :option-label="(opt) => (opt === null ? '- Null -' : opt.depot_location)"
+                  emit-value
+                  map-options
+                  @filter="filterFnDepots"
+                  label-color="grey-7"
+                  class="q-ma-none q-pb-md"
+                  behavior="menu"
+                  bg-color="white"
+                  input-class="text-black"
+                  :hide-dropdown-icon="true"
+                  color="blue-7"
+                >
+                  <template v-slot:append>
+                    <q-icon
+                      v-if="driver.depot_id !== ''"
+                      class="cursor-pointer"
+                      name="clear"
+                      @click="removeSelectedDepot()"
+                    />
+                  </template>
+                </q-select>
+              </q-card-section>
               <q-card-section class="text-left q-py-none row">
                 <div class="col-6">
                   <q-radio v-model="driver.pay_type" val="per_stop" label="PAY PER STOP" class="q-mx-auto text-white" color="white" keep-color />
@@ -154,139 +191,193 @@
 </template>
 
 <script>
-import { Loading } from 'quasar'
-import { api } from 'src/boot/api'
+import { Loading } from "quasar";
+import { api } from "src/boot/api";
 export default {
-  name: 'NewDriver',
-  data () {
+  name: "NewDriver",
+  data() {
     return {
       driver: {
-        id: '',
-        full_name: '',
-        driver_name: '',
-        password: '',
-        confirmPassword: '',
-        phone: '',
-        email: '',
-        pay_type: '',
-        vat_percentage: '',
-        pay_amount: '',
-        has_access: 0
+        id: "",
+        full_name: "",
+        driver_name: "",
+        password: "",
+        confirmPassword: "",
+        phone: "",
+        email: "",
+        pay_type: "",
+        vat_percentage: "",
+        pay_amount: "",
+        has_access: 0,
+        depot_id: "",
       },
       pay_options: [
-        { label: 'PAY PER STOP', value: 'per_stop' },
-        { label: 'FIXED RATE', value: 'fixed' }
+        { label: "PAY PER STOP", value: "per_stop" },
+        { label: "FIXED RATE", value: "fixed" },
       ],
       vat_options: [
-        { label: 'VAT 20.00%', value: 0.2 },
-        { label: 'VAT 0.00%', value: 0 }
+        { label: "VAT 20.00%", value: 0.2 },
+        { label: "VAT 0.00%", value: 0 },
       ],
       userAvatar: {},
-      isNewPage: false
+      isNewPage: false,
+      depots: [],
+      filteredDepots: []
+    };
+  },
+  async created() {
+    this.$store.commit("auth/pageTitle", this.$router.currentRoute.meta.title);
+    this.isNew();
+    await this.getDepotList();
+    if (!this.isNewPage) {
+      this.filteredDepots = this.depots;
+      await this.getDriverInfo(this.driver.id);
     }
   },
-  async created () {
-    this.$store.commit('auth/pageTitle', this.$router.currentRoute.meta.title)
-    this.isNew()
-    if (!this.isNewPage) {
-      await this.getDriverInfo(this.driver.id)
-    }
+  computed: {
+    user: {
+      get() {
+        return this.$store.state.auth.user;
+      },
+    },
+    userLevel: {
+      get() {
+        return this.$store.state.auth.userLevel;
+      },
+    },
   },
   methods: {
-    isNew () {
-      if (this.$router.currentRoute.params.id !== null && this.$router.currentRoute.params.id !== undefined && this.$router.currentRoute.params.id !== '') {
-        this.isNewPage = false
-        this.driver.id = this.$router.currentRoute.params.id
+    isNew() {
+      if (
+        this.$router.currentRoute.params.id !== null &&
+        this.$router.currentRoute.params.id !== undefined &&
+        this.$router.currentRoute.params.id !== ""
+      ) {
+        this.isNewPage = false;
+        this.driver.id = this.$router.currentRoute.params.id;
       } else {
-        this.isNewPage = true
+        this.isNewPage = true;
+      }
+    },
+    getDepotList: async function() {
+      try {
+        let res = await api.getDepotList()
+        this.depots = res.data.data
+      } catch (e) {
       }
     },
     getDriverInfo: async function (id) {
-      Loading.show()
+      Loading.show();
       try {
-        let res = await api.getDriverInfo(id)
-        this.driver = res.data.driver
-        console.log('driver details', res.data.driver)
-        Loading.hide()
+        let res = await api.getDriverInfo(id);
+        this.driver = res.data.driver;
+        console.log("driver details", res.data.driver);
+        Loading.hide();
       } catch (e) {
-        Loading.hide()
-        this.$router.push('/dashboard/drivers')
+        Loading.hide();
+        this.$router.push("/dashboard/drivers");
       }
     },
-    addAvatar (files) {
-      this.userAvatar = files[0]
+    addAvatar(files) {
+      this.userAvatar = files[0];
     },
-    async onSubmit () {
+    async onSubmit() {
+      if (this.userLevel === "user") {
+        this.driver.depot_id = this.user.depot_id;
+      }
       if (this.isNewPage) {
-        console.log('driver', this.driver)
-        Loading.show()
+        Loading.show();
         try {
-          let res = await api.createDriver(this.driver)
-          console.log('res', res.data)
-          Loading.hide()
+          let res = await api.createDriver(this.driver);
+          console.log("res", res.data);
+          Loading.hide();
           this.$q.notify({
-            color: 'positive',
-            textColor: 'white',
-            position: 'top',
-            message: 'User is registered successfully'
-          })
-          this.$router.push('/dashboard/drivers')
+            color: "positive",
+            textColor: "white",
+            position: "top",
+            message: "Driver is registered successfully",
+          });
+          this.$router.push("/dashboard/drivers");
         } catch (error) {
-          Loading.hide()
+          Loading.hide();
         }
       } else {
         const params = {
-          data: this.driver
-        }
+          data: this.driver,
+        };
         params.conditions = {
-          id: this.driver.id
-        }
-        Loading.show()
+          id: this.driver.id,
+        };
+        Loading.show();
         try {
-          let res = await api.updateDriver(params)
-          Loading.hide()
-          console.log('result', res.data)
+          let res = await api.updateDriver(params);
+          Loading.hide();
+          console.log("result", res.data);
         } catch (error) {
-          Loading.hide()
-          console.log('error', error)
+          Loading.hide();
+          console.log("error", error);
         }
-        this.$router.push('/dashboard/drivers')
+        this.$router.push("/dashboard/drivers");
       }
     },
-    remove () {
+    remove() {
       // Confirm Remove Vehicle
-      this.$q.dialog({
-        title: 'Confirm',
-        message: 'Are you surely remove ' + this.driver.driver_name + '?',
-        cancel: true,
-        persistent: true
-      }).onOk(async () => {
-        const params = {
-          conditions: {
-            id: this.driver.id
+      this.$q
+        .dialog({
+          title: "Confirm",
+          message: "Are you surely remove " + this.driver.driver_name + "?",
+          cancel: true,
+          persistent: true,
+        })
+        .onOk(async () => {
+          const params = {
+            conditions: {
+              id: this.driver.id,
+            },
+          };
+          Loading.show();
+          try {
+            let res = await api.removeDriver(params);
+            Loading.hide();
+            console.log("remove result", res);
+            this.$q.notify({
+              color: "positive",
+              position: "top",
+              message: this.driver.driver_name + " is removed successfully !",
+            });
+            // this.getUsers({
+            //   pagination: this.pagination,
+            //   filter: undefined
+            // })
+          } catch (e) {
+            Loading.hide();
+          }
+          this.$router.push("/dashboard/drivers");
+        })
+        .onCancel(() => {})
+        .onDismiss(() => {});
+    },
+    filterFnDepots (val, update, abort) {
+      update(() => {
+        if (val === '') {
+          this.filteredDepots = []
+        } else {
+          const needle = val.toLowerCase()
+          this.filteredDepots = this.depots.filter(depot => depot.depot_location.toLowerCase().indexOf(needle) > -1)
+          this.filteredDepots = this.filteredDepots.slice(0, 3)
+        }
+      },
+      ref => {
+        if (val !== '' && ref.options.length > 0) {
+          const matchedDepot = ref.options.find(item => item.depot_location.toLowerCase() === val.toLowerCase())
+          if (matchedDepot) {
+            ref.add(matchedDepot) // reset optionIndex in case there is something selected
           }
         }
-        Loading.show()
-        try {
-          let res = await api.removeDriver(params)
-          Loading.hide()
-          console.log('remove result', res)
-          this.$q.notify({
-            color: 'positive',
-            position: 'top',
-            message: this.driver.driver_name + ' is removed successfully !'
-          })
-          // this.getUsers({
-          //   pagination: this.pagination,
-          //   filter: undefined
-          // })
-        } catch (e) {
-          Loading.hide()
-        }
-        this.$router.push('/dashboard/drivers')
-      }).onCancel(() => {
-      }).onDismiss(() => {
       })
+    },
+    removeSelectedDepot () {
+      this.driver.depot_id = '';
     }
     // async activeUser () {
     //   const params = {
@@ -311,6 +402,6 @@ export default {
     //     Loading.hide()
     //   }
     // }
-  }
-}
+  },
+};
 </script>

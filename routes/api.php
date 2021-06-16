@@ -31,6 +31,7 @@ Route::post('/getMonthlyReportsByDriver', 'DriverController@getMonthlyReportsByD
 
 Route::post('/getLocatorResults', 'LocatorController@getLocatorResults');
 Route::post('/convertbng2latlong', 'LocatorController@convertbng2latlong');
+Route::post('/getAreaData', 'LocatorController@getAreaData');
 
 Route::group(['middleware' => 'auth:api'], function () {
   Route::post('/registerUser', 'UserController@register');
@@ -56,6 +57,11 @@ Route::group(['middleware' => 'auth:api'], function () {
   Route::post('/createRoute', 'ReportController@createRoute');
   Route::post('/updateRoute', 'ReportController@updateRoute');
   Route::post('/removeRoute', 'ReportController@removeRoute');
+  Route::get('/getDepotAll', 'ReportController@getDepotAll');
+  Route::post('/getDepots', 'ReportController@getDepots');
+  Route::post('/createDepot', 'ReportController@createDepot');
+  Route::post('/updateDepot', 'ReportController@updateDepot');
+  Route::post('/removeDepot', 'ReportController@removeDepot');
   Route::post('/getReports', 'ReportController@getReports');
   Route::post('/getReportsAll', 'ReportController@getReportsAll');
   Route::post('/getMonthlyReports', 'ReportController@getMonthlyReports');

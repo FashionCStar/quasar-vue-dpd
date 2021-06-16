@@ -38,6 +38,7 @@
               <q-td key="driver_name" :props="props">{{ props.row.driver_name }}</q-td>
               <q-td key="email" :props="props">{{ props.row.email }}</q-td>
               <q-td key="phone" :props="props">{{ props.row.phone }}</q-td>
+              <q-td key="depot_location" :props="props">{{ props.row.depot.depot_location }}</q-td>
               <q-td key="pay_type" :props="props">{{ props.row.pay_type === 'per_stop' ? 'PAY PER STOP' : 'FIXED RATE' }}</q-td>
               <q-td key="pay_amount" :props="props">{{ '£' + props.row.pay_amount }}</q-td>
               <q-td key="vat_percentage" :props="props">{{ props.row.vat_percentage * 100 + '%' }}</q-td>
@@ -194,6 +195,7 @@ export default {
         { name: 'driver_name', required: true, label: 'FULL NAME', align: 'left', field: 'driver_name' },
         { name: 'email', required: true, label: 'EMAIL', align: 'left', field: 'email' },
         { name: 'phone', required: true, label: 'PHONE', align: 'left', field: 'phone' },
+        { name: 'depot_location', required: true, label: 'DEPOT LOCATION', align: 'left', field: 'depot_location' },
         { name: 'pay_type', required: true, label: 'PAYMENT TYPE', align: 'left', field: 'pay_type' },
         { name: 'pay_amount', required: true, label: 'PRICE', align: 'left', field: 'pay_amount' },
         { name: 'vat_percentage', required: true, label: 'VAT', align: 'left', field: 'vat_percentage' },
@@ -205,6 +207,7 @@ export default {
         { name: 'driver_name', required: true, label: 'FULL NAME', align: 'left', field: 'driver_name' },
         { name: 'email', required: true, label: 'EMAIL', align: 'left', field: 'email' },
         { name: 'phone', required: true, label: 'PHONE', align: 'left', field: 'phone' },
+        { name: 'depot_location', required: true, label: 'DEPOT LOCATION', align: 'left', field: 'depot_location' },
         { name: 'pay_type', required: true, label: 'PAYMENT TYPE', align: 'left', field: 'pay_type' },
         { name: 'pay_amount', required: true, label: 'PRICE', align: 'left', field: 'pay_amount' },
         { name: 'vat_percentage', required: true, label: 'VAT', align: 'left', field: 'vat_percentage' },

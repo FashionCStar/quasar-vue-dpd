@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Depot;
 use Illuminate\Http\Request;
 // use Auth;
 use Validator;
@@ -122,7 +123,6 @@ class ReportController extends Controller
             $lastNo = 1;
           }
           $report_no = $reportInfo['report_date'] . '-' . $lastNo;
-
           foreach($reportInfo['report_data'] as $data) {
             $report = new Report;
             $report->user_id = $user_id;
@@ -130,6 +130,7 @@ class ReportController extends Controller
             $report->route_id = $data['route_id'];
             // $report->report_title = $reportInfo['report_title']?$reportInfo['report_title']:'';
             $report->report_date = $reportInfo['report_date'];
+            $report->stops = $data['stops'];
             $report->report_no = $report_no;
             $report->is_group = 1;
             $report->save();
@@ -172,6 +173,7 @@ class ReportController extends Controller
             $report->driver_id = $data['driver_id'];
             $report->route_id = $data['route_id'];
             $report->report_date = $reportInfo['report_date'];
+            $report->stops = $data['stops'];
             $report->report_no = $report_no;
             $report->is_group = 1;
             $report->save();
@@ -207,11 +209,22 @@ class ReportController extends Controller
       if ($user->user_type == '0') {
         $routes = Route::where('route_type', 0)->where('deleted_date', NULL)->get();
       } else {
-        $routes = Route::whereUserId($user->id)->where('route_type', 0)->where('deleted_date', NULL)->get();
+        if ($user->user_type == '1') {
+          $depot_id = $request->query()['depot_id']?$request->query()['depot_id']:"";
+          $routes = Route::whereUserId($user->id)->where('depot_id', $depot_id)->where('route_type', 0)->where('deleted_date', NULL)->get();
+        } else {
+          $routes = Route::where(function($q) use ($user) {
+            $q->whereUserId($user->id)->orWhere(function($q2) use ($user) {
+              $q2->where('user_id', $user->parent_id)
+                ->where('depot_id', $user->depot_id);
+            });
+          })->where('route_type', 0)->where('deleted_date', NULL)->get();
+        }
+        // $routes = Route::whereUserId($user->id)->where('route_type', 0)->where('deleted_date', NULL)->get();
       }
       return response()->json(['success'=>'success', 'data' => $routes], 200, [], JSON_NUMERIC_CHECK);
     } else {
-      return response()->json(['failed'=>'failed'], 401);
+      return response()->json(['failed'=>'failed'], 404);
     }
   }
   public function getExtraRoutes(Request $request) {
@@ -220,7 +233,18 @@ class ReportController extends Controller
       if ($user->user_type == '0') {
         $routes = Route::where('route_type', 1)->get();
       } else {
-        $routes = Route::whereUserId($user->id)->where('route_type', 1)->get();
+        if ($user->user_type == '1') {
+          $depot_id = $request->query()['depot_id']?$request->query()['depot_id']:"";
+          $routes = Route::whereUserId($user->id)->where('depot_id', $depot_id)->where('route_type', 1)->get();
+        } else {
+          $routes = Route::where(function($q) use ($user) {
+            $q->whereUserId($user->id)->orWhere(function($q2) use ($user) {
+              $q2->where('user_id', $user->parent_id)
+                ->where('depot_id', $user->depot_id);
+            });
+          })->where('route_type', 1)->get();
+        }
+        // $routes = Route::whereUserId($user->id)->where('route_type', 1)->get();
       }
       return response()->json(['success'=>'success', 'data' => $routes], 200, [], JSON_NUMERIC_CHECK);
     } else {
@@ -507,18 +531,18 @@ class ReportController extends Controller
         $search = $request['conditions']['filter'];
         if ($user->user_type == '0') {
           $totalCount = count(Route::where('route_number', 'like', '%' . $search . '%')->where('deleted_date', NULL)->get());
-          $routes = Route::with(['user'])->where('route_number', 'like', '%' . $search . '%')->where('deleted_date', NULL)->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+          $routes = Route::with(['user'])->with(['depot'])->where('route_number', 'like', '%' . $search . '%')->where('deleted_date', NULL)->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
         } else {
           $totalCount = count(Route::whereUserId($user->id)->where('route_number', 'like', '%' . $search . '%')->where('deleted_date', NULL)->get());
-          $routes = Route::with(['user'])->whereUserId($user->id)->where('route_number', 'like', '%' . $search . '%')->where('deleted_date', NULL)->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+          $routes = Route::with(['user'])->with(['depot'])->whereUserId($user->id)->where('route_number', 'like', '%' . $search . '%')->where('deleted_date', NULL)->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
         }
       } else {
         if ($user->user_type == '0') {
           $totalCount = count(Route::where('deleted_date', NULL)->get());
-          $routes = Route::with(['user'])->where('deleted_date', NULL)->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+          $routes = Route::with(['user'])->with(['depot'])->where('deleted_date', NULL)->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
         } else {
           $totalCount = count(Route::whereUserId($user->id)->where('deleted_date', NULL)->get());
-          $routes = Route::with(['user'])->whereUserId($user->id)->where('deleted_date', NULL)->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+          $routes = Route::with(['user'])->with(['depot'])->whereUserId($user->id)->where('deleted_date', NULL)->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
         }
       }
       if ($totalCount == 0) {
@@ -541,6 +565,7 @@ class ReportController extends Controller
         } else {
           $route = new Route;
           $route->route_number = $routeInfo['route_number'];
+          $route->depot_id = $routeInfo['depot_id'];
           $route->route_type = $routeInfo['route_type'];
           $route->user_id = $user_id;
           $route->save();
@@ -561,6 +586,7 @@ class ReportController extends Controller
       try {
         $route = Route::find($routeID);
         $route->route_number = $routeInfo['route_number'];
+        $route->depot_id = $routeInfo['depot_id'];
         $route->user_id = $user_id;
         $route->save();
         return response()->json(['success' => 'success', 'data' => $route], 200, [], JSON_NUMERIC_CHECK);
@@ -581,6 +607,107 @@ class ReportController extends Controller
         return response()->json(['success' => 'Route Successfully Removed']);
       } catch (\Exception $e) {
         return response()->json(['error' => 'Route Remove Failed']);
+      }
+    } else {
+      return response()->json(['failed'=>'failed'], 401);
+    }
+  }
+  public function getDepotAll(Request $request) {
+    if (Auth::user()) {
+      $user = Auth::user();
+      if ($user->user_type == '0') {
+        $depots = Depot::all();
+      } else {
+        $depots = Depot::whereUserId($user->id)->get();
+      }
+      return response()->json(['success'=>'success', 'data' => $depots], 200, [], JSON_NUMERIC_CHECK);
+    } else {
+      return response()->json(['failed'=>'failed'], 401);
+    }
+  }
+  public function getDepots (Request $request) {
+    if (Auth::user()) {
+      $user = Auth::user();
+      $start = $request['start'] ? $request['start'] : 0;
+      $numPerPage = $request['numPerPage'] ? $request['numPerPage'] : 10;
+      $sortBy = $request['sortBy'] ? $request['sortBy'] : 'depot_location';
+      $desc = $request['descending'] ? 'DESC' : 'ASC';
+
+      if ($request['conditions'] && $request['conditions']['filter']) {
+        $search = $request['conditions']['filter'];
+        if ($user->user_type == '0') {
+          $totalCount = count(Depot::where('depot_location', 'like', '%' . $search . '%')->get());
+          $depots = Depot::with(['user'])->where('depot_location', 'like', '%' . $search . '%')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+        } else {
+          $totalCount = count(Depot::whereUserId($user->id)->where('depot_location', 'like', '%' . $search . '%')->get());
+          $depots = Depot::with(['user'])->whereUserId($user->id)->where('depot_location', 'like', '%' . $search . '%')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+        }
+      } else {
+        if ($user->user_type == '0') {
+          $totalCount = count(Depot::all());
+          $depots = Depot::with(['user'])->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+        } else {
+          $totalCount = count(Depot::whereUserId($user->id)->get());
+          $depots = Depot::with(['user'])->whereUserId($user->id)->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+        }
+      }
+      if ($totalCount == 0) {
+        return response()->json(['success'=>'success', 'totalCount' => $totalCount, 'data' => []], 200, [], JSON_NUMERIC_CHECK);
+      } else {
+        return response()->json(['success'=>'success', 'totalCount' => $totalCount, 'data' => $depots], 200, [], JSON_NUMERIC_CHECK);
+      }
+    } else {
+      return response()->json(['failed'=>'failed'], 401);
+    }
+  }
+
+  public function createDepot (Request $request) {
+    if (Auth::user()) {
+      $user_id = Auth::user()->id;
+      $depot_info = $request['data'];
+      try {
+        $existing_depot = Depot::whereUserId($user_id)->where('depot_location', $depot_info['depot_location'])->get();
+        if (count($existing_depot)) {
+          return response()->json(['message' => 'Depot already exists'], 409);
+        } else {
+          $depot_info['user_id'] = $user_id;
+          $depot = Depot::create($depot_info);
+          return response()->json(['ddd'=>$depot], 200);
+          return response()->json(['success' => 'success', 'data' => $depot], 200, [], JSON_NUMERIC_CHECK);
+        }
+      } catch (\Exception $e) {
+        return response()->json(['message' => 'Cant add Depot', 'error' => $e], 500);
+      }
+    } else {
+      return response()->json(['failed'=>'failed'], 401);
+    }
+  }
+  public function updateDepot (Request $request) {
+    if (Auth::user()) {
+      $depoInfo = $request['data'];
+      $user_id = Auth::user()->id;
+      $depotID = $request['conditions']['id'];
+      try {
+        $depot = Depot::find($depotID);
+        $depot->depot_location = $depoInfo['depot_location'];
+        $depot->user_id = $user_id;
+        $depot->save();
+        return response()->json(['success' => 'success', 'data' => $depot], 200, [], JSON_NUMERIC_CHECK);
+      } catch (\Exception $e) {
+        return response()->json(['message' => 'Depot updating is failed', 'error' => $e], 500);
+      }
+    } else {
+      return response()->json(['failed'=>'failed'], 401);
+    }
+  }
+  public function removeDepot (Request $request) {
+    if (Auth::user()) {
+      $depotID = $request['conditions']['id'];
+      try {
+        Depot::findOrFail($depotID)->delete();
+        return response()->json(['success' => 'Depot Successfully Removed']);
+      } catch (\Exception $e) {
+        return response()->json(['error' => 'Depot Remove Failed']);
       }
     } else {
       return response()->json(['failed'=>'failed'], 401);

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Driver;
 use App\Mail\RegisterUserMail;
 use App\Mail\ActiveUserMail;
 use App\Mail\DeactiveUserMail;
@@ -31,11 +32,27 @@ class UserController extends Controller
       if ($user->is_active) {
         Auth::login($user);
         $user = User::find(Auth::id());
-        return response()->json($this->successResponse($user), 200, [], JSON_NUMERIC_CHECK);
+        return response()->json($this->successResponse($user, "user"), 200, [], JSON_NUMERIC_CHECK);
       } else {
         return response()->json([
           'error' => 'Unauthorised',
           'message' => 'You are not activated by Admin'
+        ], 401);
+      }
+      // if (Auth::attempt($credentials)) {
+      //   $user = User::find(Auth::id());
+      //   return response()->json($this->successResponse($user), 200);
+      // }
+    } else if (Auth::guard('driver')->validate($credentials)) {
+      $driver = Auth::guard('driver')->getLastAttempted();
+      if ($driver->has_access) {
+        Auth::guard('driver')->login($driver);
+        $driver = Driver::find(Auth::guard('driver')->id());
+        return response()->json($this->successResponse($driver, "driver"), 200, [], JSON_NUMERIC_CHECK);
+      } else {
+        return response()->json([
+          'error' => 'Unauthorised',
+          'message' => 'You dont have permission to login'
         ], 401);
       }
       // if (Auth::attempt($credentials)) {
@@ -61,13 +78,13 @@ class UserController extends Controller
     if ($validator->fails()) {
       return response()->json(['message'=>'User Info is not correct, Please check again','error' => $validator->errors()], 401);
     }
-    $loggedUser = Auth::user();
+    $loggedUser = Auth::guard('api')->user();
     if (!$loggedUser) {
       $parent_id = User::where('user_type', 0)->get()[0]->id;
     } else {
       $parent_id = $loggedUser->id;
     }
-    
+
     $input = $request->all();
     $input['password'] = bcrypt($input['password']);
     $input['parent_id'] = $parent_id;
@@ -78,7 +95,7 @@ class UserController extends Controller
       $input['user_roles'] = "";
     }
     $user = User::create($input);
-    $successUser = $this->successResponse($user);
+    $successUser = $this->successResponse($user, "user");
     if ($user['user_type'] == 1) {
       $this->sendRegisterEmail('lukas.tarutis@gmail.com', $user->email);
     }
@@ -99,7 +116,7 @@ class UserController extends Controller
     if ($validator->fails()) {
       return response()->json(['message'=>'User Info is not correct, Please check again','error' => $validator->errors()], 401);
     }
-    $loggedUser = Auth::user();
+    $loggedUser = Auth::guard('api')->user();
     if (!$loggedUser) {
       $parent_id = User::where('user_type', 0)->get()[0]->id;
     } else {
@@ -118,7 +135,7 @@ class UserController extends Controller
     return response()->json(['success' => 'success', 'user' => $user], 200, [], JSON_NUMERIC_CHECK);
   }
   public function removeUser(Request $request) {
-    $loggedUser = Auth::user();
+    $loggedUser = Auth::guard('api')->user();
     if (!$loggedUser->user_type) {
       $user_id = $request['conditions']['id'];
       User::find($user_id)->delete();
@@ -133,7 +150,7 @@ class UserController extends Controller
   }
 
   public function activeUser(Request $request) {
-    $loggedUser = Auth::user();
+    $loggedUser = Auth::guard('api')->user();
     if (!$loggedUser->user_type) {
       $user_id = $request['conditions']['id'];
       $is_active = $request['is_active'];
@@ -178,7 +195,7 @@ class UserController extends Controller
 
   public function confirmUser(Request $request) {
 //    return $request->user();
-    $user = Auth::user();
+    $user = Auth::guard('api')->user();
     $user->update(['is_active' => 1]);
     return response()->json([
       'success' => 'User Verification is success',
@@ -235,18 +252,18 @@ class UserController extends Controller
 
   public function myProfile(Request $request)
   {
-    return response()->json(['success' => 'success', 'user' => Auth::user()]);
+    return response()->json(['success' => 'success', 'user' => Auth::guard('api')->user()]);
   }
   public function updateProfile(Request $request)
   {
     $userData = $request['data'];
-    $user = Auth::user();
+    $user = Auth::guard('api')->user();
     $user->update($userData);
     return response()->json(['success' => 'success', 'user' => $user], 200, [], JSON_NUMERIC_CHECK);
   }
 
   public function getClients(Request $request) {
-    if (Auth::user()->user_type == 0) {
+    if (Auth::guard('api')->user()->user_type == 0) {
       $start = $request['start'] ? $request['start'] : 0;
       $numPerPage = $request['numPerPage'] ? $request['numPerPage'] : 10;
       $sortBy = $request['sortBy'] ? $request['sortBy'] : 'name';
@@ -271,14 +288,14 @@ class UserController extends Controller
   }
 
   public function getUsers(Request $request) {
-    if (Auth::user()->user_type < 2) {
+    if (Auth::guard('api')->user()->user_type < 2) {
       $start = $request['start'] ? $request['start'] : 0;
       $numPerPage = $request['numPerPage'] ? $request['numPerPage'] : 10;
       $sortBy = $request['sortBy'] ? 'users.'.$request['sortBy'] : 'users.name';
       $desc = $request['descending'] ? 'DESC' : 'ASC';
 
       $parent_id = Auth::id();
-      $users = User::leftJoin('users as parents', 'users.parent_id', '=', 'parents.id')->where('users.user_type', 2);
+      $users = User::leftJoin('users as parents', 'users.parent_id', '=', 'parents.id')->leftJoin('depots', 'users.depot_id', '=', 'depots.id')->where('users.user_type', 2);
       if ($request['conditions'] && isset($request['conditions']['filter'])) {
         $search = $request['conditions']['filter'];
         $users = $users->where('name', 'like', '%' . $search . '%');
@@ -287,7 +304,7 @@ class UserController extends Controller
         $users = $users->where('users.parent_id', $parent_id);
       }
       $totalCount = count($users->get());
-      $users = $users->select('users.id', 'users.name', 'users.full_name', 'users.email', 'users.phone', 'users.belongs', 'users.country', 'users.address', 'users.zipcode', 'users.user_roles', 'users.is_active', 'parents.name as parent_username', 'parents.full_name as parent_name')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+      $users = $users->select('users.id', 'users.name', 'users.full_name', 'users.email', 'users.phone', 'depots.depot_location', 'users.belongs', 'users.country', 'users.address', 'users.zipcode', 'users.user_roles', 'users.is_active', 'parents.name as parent_username', 'parents.full_name as parent_name')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
       if ($totalCount == 0) {
         return response()->json(['success'=>'success', 'totalCount' => $totalCount, 'data' => []], 200);
       } else {
@@ -320,9 +337,10 @@ class UserController extends Controller
     return $bookings->groupBy('name');
   }
 
-  private function successResponse(User $user)
+  private function successResponse($user, $type)
   {
     $freshToken = $user->createToken('MyApp');
+    $success['user_type'] = $type;
     $success['user'] = $user;
     $success['token'] = $freshToken->accessToken;
     $success['expiresAt'] = $freshToken->token->expires_at;

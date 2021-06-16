@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Report;
 
 class Route extends Model {
-    protected $fillable = ['route_number'];
+    protected $fillable = ['route_number', 'depot_id'];
     
     public function reports()
     {
@@ -15,5 +15,9 @@ class Route extends Model {
     public function user()
     {
         return $this->belongsTo('App\User');
+    }
+    public function depot()
+    {
+        return $this->belongsTo('App\Depot');
     }
 }

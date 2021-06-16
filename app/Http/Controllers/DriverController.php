@@ -82,7 +82,18 @@ class DriverController extends Controller
       if ($user->user_type == '0') {
         $drivers = Driver::where('deleted_date', NULL)->orWhere('deleted_date', '>', $report_datetime)->get();
       } else {
-        $drivers = Driver::whereUserId($user->id)->where('deleted_date', NULL)->orWhere('deleted_date', '>', $report_datetime)->get();
+        if ($user->user_type == '1') {
+          $depot_id = $request->query()['depot_id']?$request->query()['depot_id']:"";
+          $drivers = Driver::whereUserId($user->id)->where('depot_id', $depot_id)->where('deleted_date', NULL)->orWhere('deleted_date', '>', $report_datetime)->get();
+        } else {
+          $drivers = Driver::where(function($q) use ($user) {
+            $q->whereUserId($user->id)->orWhere(function($q2) use ($user) {
+              $q2->where('user_id', $user->parent_id)
+                ->where('depot_id', $user->depot_id);
+            });
+          })->where('deleted_date', NULL)->orWhere('deleted_date', '>', $report_datetime)->get();
+          // $drivers = Driver::whereUserId($user->id)->where('deleted_date', NULL)->orWhere('deleted_date', '>', $report_datetime)->get();
+        }
       }
       return response()->json(['success'=>'success', 'data' => $drivers], 200, [], JSON_NUMERIC_CHECK);
     } else {
@@ -102,18 +113,18 @@ class DriverController extends Controller
         $search = $request['conditions']['filter'];
         if ($user->user_type == '0') {
           $totalCount = count(Driver::where('driver_name', 'like', '%' . $search . '%')->where('deleted_date', NULL)->where('driver_name', '<>', 'RNC')->get());
-          $drivers = Driver::with(['user'])->where('driver_name', 'like', '%' . $search . '%')->where('deleted_date', NULL)->where('driver_name', '<>', 'RNC')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+          $drivers = Driver::with(['user'])->with(['depot'])->where('driver_name', 'like', '%' . $search . '%')->where('deleted_date', NULL)->where('driver_name', '<>', 'RNC')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
         } else {
           $totalCount = count(Driver::whereUserId($user->id)->where('driver_name', 'like', '%' . $search . '%')->where('deleted_date', NULL)->where('driver_name', '<>', 'RNC')->get());
-          $drivers = Driver::with(['user'])->whereUserId($user->id)->where('driver_name', 'like', '%' . $search . '%')->where('deleted_date', NULL)->where('driver_name', '<>', 'RNC')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+          $drivers = Driver::with(['user'])->with(['depot'])->whereUserId($user->id)->where('driver_name', 'like', '%' . $search . '%')->where('deleted_date', NULL)->where('driver_name', '<>', 'RNC')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
         }
       } else {
         if ($user->user_type == '0') {
           $totalCount = count(Driver::where('deleted_date', NULL)->where('driver_name', '<>', 'RNC')->get());
-          $drivers = Driver::with(['user'])->where('deleted_date', NULL)->where('driver_name', '<>', 'RNC')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+          $drivers = Driver::with(['user'])->with(['depot'])->where('deleted_date', NULL)->where('driver_name', '<>', 'RNC')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
         } else {
           $totalCount = count(Driver::whereUserId($user->id)->where('deleted_date', NULL)->where('driver_name', '<>', 'RNC')->get());
-          $drivers = Driver::with(['user'])->whereUserId($user->id)->where('deleted_date', NULL)->where('driver_name', '<>', 'RNC')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
+          $drivers = Driver::with(['user'])->with(['depot'])->whereUserId($user->id)->where('deleted_date', NULL)->where('driver_name', '<>', 'RNC')->orderBy($sortBy, $desc)->skip($start)->take($numPerPage)->get();
         }
       }
       if ($totalCount == 0) {

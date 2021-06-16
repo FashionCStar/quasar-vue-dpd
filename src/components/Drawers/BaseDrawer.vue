@@ -99,6 +99,22 @@
     <q-separator color="white" v-if="(userLevel!=='driver' && userLevel !== 'user') || checkUserRoles('routes')"/>
     <q-item
       clickable
+      to="/dashboard/depots"
+      active-class="router--active"
+      v-if="(userLevel!=='driver' && userLevel !== 'user') || checkUserRoles('depots')"
+    >
+      <q-item-section avatar>
+        <q-icon>
+          <img width="25px" :src="require('../../assets/images/icons/006-way.svg')">
+        </q-icon>
+      </q-item-section>
+      <q-item-section class="text-white">
+        <q-item-label>DEPOTS</q-item-label>
+      </q-item-section>
+    </q-item>
+    <q-separator color="white" v-if="(userLevel!=='driver' && userLevel !== 'user') || checkUserRoles('depots')"/>
+    <q-item
+      clickable
       to="/dashboard/driver-performance"
       active-class="router--active"
       v-if="userLevel==='driver'"
@@ -112,7 +128,7 @@
         <q-item-label>PERFORMANCE</q-item-label>
       </q-item-section>
     </q-item>
-    <q-item
+    <!-- <q-item
       clickable
       to="/dashboard/locator-search"
       active-class="router--active"
@@ -125,7 +141,7 @@
       <q-item-section class="text-white">
         <q-item-label>LOCATOR</q-item-label>
       </q-item-section>
-    </q-item>
+    </q-item> -->
   </div>
 </template>
 
