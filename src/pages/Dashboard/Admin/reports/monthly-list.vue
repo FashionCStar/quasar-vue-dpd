@@ -5,7 +5,7 @@
         <q-table
           :class="is_mobile === 'ios'?'my-sticky-dynamic table-top-ios':is_mobile==='android'?'my-sticky-dynamic table-top-android': 'my-sticky-dynamic'"
           :data="monthlyList"
-          :columns="userLevel === 'admin' ? columns_admin : columns"
+          :columns="userLevel !== 'user' ? columns_admin : columns"
           row-key="report_date"
           :filter="filter"
           @request="getMonthlyList"
@@ -61,6 +61,7 @@
             <q-tr :props="props">
               <q-td key="index" :props="props">{{ props.row.index }}</q-td>
               <q-td key="report_date" :props="props" class="text-uppercase">{{ changeDateFormat(props.row.report_date) }}</q-td>
+              <q-td key="depot_location" :props="props">{{ props.row.depot_location }}</q-td>
               <q-td key="route_number" :props="props">{{ props.row.route_number }}</q-td>
               <q-td key="driver_name" :props="props">{{ props.row.driver_name }}</q-td>
               <q-td key="pay_type" :props="props">{{ props.row.pay_type === 'fixed' ? 'FIXED' : 'PAY PER STOP' }}</q-td>
@@ -68,7 +69,7 @@
               <q-td key="pay_amount" :props="props">{{ props.row.pay_amount ? '£' +  props.row.pay_amount : '' }}</q-td>
               <q-td key="vat_percentage" :props="props">{{ props.row.vat_percentage * 100 + '%' }}</q-td>
               <q-td key="is_group" :props="props">{{ props.row.is_group === 1 ? 'DAILY':'EXTRA' }}</q-td>
-              <q-td v-if="userLevel === 'admin'" key="user_name" :props="props">{{ props.row.user.full_name }}</q-td>
+              <q-td v-if="userLevel !== 'user'" key="user_name" :props="props">{{ props.row.user.name }}</q-td>
             </q-tr>
           </template>
 
@@ -271,7 +272,7 @@ export default {
       columns: [
         { name: 'index', required: true, label: 'NO', align: 'left', field: 'index' },
         { name: 'report_date', required: true, label: 'DATE', align: 'left', field: 'report_date' },
-        // { name: 'user_name', required: true, label: 'MANAGER', align: 'left', field: 'user_name', sortable: true },
+        { name: 'depot_location', required: true, label: 'DEPOT', align: 'left', field: 'depot_location' },
         { name: 'route_number', required: true, label: 'ROUTE', align: 'left', field: 'route_number' },
         { name: 'driver_name', required: true, label: 'DRIVER', align: 'left', field: 'driver_name' },
         { name: 'pay_type', required: true, label: 'PAY TYPE', align: 'left', field: 'pay_type' },
@@ -283,6 +284,7 @@ export default {
       columns_admin: [
         { name: 'index', required: true, label: 'NO', align: 'left', field: 'index' },
         { name: 'report_date', required: true, label: 'DATE', align: 'left', field: 'report_date' },
+        { name: 'depot_location', required: true, label: 'DEPOT', align: 'left', field: 'depot_location' },
         { name: 'route_number', required: true, label: 'ROUTE', align: 'left', field: 'route_number' },
         { name: 'driver_name', required: true, label: 'DRIVER', align: 'left', field: 'driver_name' },
         { name: 'stops', required: true, label: 'STOPS', align: 'left', field: 'stops' },
@@ -661,7 +663,7 @@ export default {
       // get All records before export
       await this.getMonthlyAll({ filter: this.filter })
       // naive encoding to csv format
-      let columns = this.userLevel === 'admin' ? this.columns_admin : this.columns
+      let columns = this.userLevel !== 'user' ? this.columns_admin : this.columns
       const content = [ columns.map(col => wrapCsvValue(col.label)) ].concat(
         this.monthlyAll.map(row => columns.map(col => {
           if (col.field === 'is_group') {

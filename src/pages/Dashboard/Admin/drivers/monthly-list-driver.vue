@@ -83,142 +83,11 @@
               </div>
               <div class="row justify-end items-center">
                 Total Records: {{pagination.rowsNumber}}
-                <!-- <q-btn
-                  icon="chevron_left"
-                  color="grey-8"
-                  round
-                  dense
-                  flat
-                  :disable="props.isFirstPage"
-                  @click="props.prevPage"
-                />
-                <span>{{props.pagination.page}} / {{Math.ceil(props.pagination.rowsNumber / props.pagination.rowsPerPage)}}</span>
-                <q-btn
-                  icon="chevron_right"
-                  color="grey-8"
-                  round
-                  dense
-                  flat
-                  :disable="props.isLastPage"
-                  @click="props.nextPage"
-                /> -->
               </div>
             </div>
           </template>
         </q-table>
       </div>
-      <q-dialog
-        v-model="showDetail"
-        persistent
-        :maximized="true"
-        transition-show="scale"
-        transition-hide="scale"
-      >
-        <q-card style="background-color: #3E444E">
-          <q-bar>
-            <q-btn dense flat icon="close" color="white" v-close-popup>
-              <q-tooltip content-class="bg-white text-primary">Close</q-tooltip>
-            </q-btn>
-            <div class="text-h6 text-white">{{dialogTitle}}</div>
-          </q-bar>
-
-          <q-separator />
-
-          <q-card-section style="max-height: 50vh" class="scroll">
-            <q-form
-              @submit="onSubmit"
-              ref="selectedRecord"
-              :model="selectedRecord"
-              style="max-width: 400px; margin: auto;"
-            >
-              <q-card style="background-color: #3E444E">
-                <q-card-section>
-                  <!-- <q-input dense outlined v-model="selectedRecord.report_date" v-if="isNewRecord" color="cyan-7" class="q-mb-xs" type="date" /> -->
-                  <q-input dense outlined v-model="selectedRecord.report_date" bg-color="white" input-class="text-black text-center" color="blue-7">
-                    <template v-slot:append>
-                      <q-icon name="event" class="cursor-pointer">
-                        <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
-                          <q-calendar
-                            ref="calendar"
-                            v-model="selectedRecord.report_date"
-                            show-work-weeks
-                            view="month"
-                            mini-mode
-                            enable-outside-days
-                            bordered
-                            locale="en-us"
-                            :class="$q.dark.isActive ? 'bg-blue-grey-3': 'bg-grey-1' "
-                            style="max-width: 300px; max-height:180px; min-width: auto; overflow: hidden"
-                          />
-                        </q-popup-proxy>
-                      </q-icon>
-                    </template>
-                  </q-input>
-                </q-card-section>
-                <q-separator color="grey-4" />
-                <q-card-section>
-                  <q-select
-                    dense
-                    label="Driver"
-                    outlined
-                    v-model="selectedRecord.driver_id"
-                    use-input
-                    hide-selected
-                    fill-input
-                    :options="filteredNames"
-                    :option-value="opt => opt === null ? null : opt.id"
-                    :option-label="opt => opt === null ? '- Null -' : opt.driver_name"
-                    emit-value
-                    map-options
-                    @filter="filterFn"
-                    class="q-mb-xs"
-                    behavior="menu"
-                    bg-color="white"
-                    input-class="text-black"
-                    color="blue-7"
-                  >
-                  </q-select>
-                  <q-select
-                    dense
-                    required
-                    label="Route"
-                    outlined
-                    v-model="selectedRecord.route_id"
-                    use-input
-                    hide-selected
-                    fill-input
-                    :options="routes"
-                    :option-value="opt => opt === null ? null : opt.id"
-                    :option-label="opt => opt === null ? '- Null -' : opt.route_number"
-                    emit-value
-                    map-options
-                    class="q-mb-xs"
-                    behavior="menu"
-                    bg-color="white"
-                    input-class="text-black"
-                    color="blue-7"
-                  >
-                  </q-select>
-                </q-card-section>
-                <q-card-actions align="center">
-                  <!-- <q-btn flat label="Cancel" color="primary" @click="cancelDetail"/> -->
-                  <!-- <q-btn flat label="Save" color="primary"  type="submit" /> -->
-                  <q-btn
-                    color="blue-7"
-                    :label="isNewRecord ? 'Add' : 'Update'"
-                    no-caps
-                    dense
-                    rounded
-                    class="q-mt-xs"
-                    style="width: 100px; height:40px"
-                    type="submit"
-                  />
-                </q-card-actions>
-              </q-card>
-            </q-form>
-          </q-card-section>
-        </q-card>
-      </q-dialog>
     </template>
   </q-page>
 </template>
@@ -281,19 +150,6 @@ export default {
       ],
       monthlyList: [],
       monthlyAll: [],
-      selectedRecord: {
-        id: '',
-        report_date: '',
-        report_title: '',
-        driver_id: '',
-        route_id: ''
-      },
-      isNewRecord: false,
-      dialogTitle: '',
-      routes: [],
-      drivers: [],
-      filteredNames: [],
-      rnc_id: '',
       is_mobile: 'web',
       isDateFilter: false
     }
@@ -332,7 +188,6 @@ export default {
     },
     changeDateFormat (reportDate) {
       let convertedDate = date.formatDate(date.addToDate(date.extractDate(reportDate, 'YYYY-MM-DD'), { hours: 5 }), 'DD-MM-YY dddd')
-      // let convertedDate = date.formatDate(date.extractDate(reportDate, 'YYYY-MM-DD HH:mm:ss'), 'DD-MM-YY ddd HH:mm')
       return convertedDate
     },
     onFromDateChanged (fromdate) {
@@ -353,98 +208,6 @@ export default {
         filter: this.filter
       })
     },
-    async goToSingleDetail (data) {
-      await this.getDriverList()
-      await this.getExtraRoutes()
-      if (data.is_group === 1) {
-        this.$router.push({ name: 'Edit Schedule', params: { report_no: data.report_no } })
-      } else {
-        this.isNewRecord = false
-        this.filteredNames = this.drivers
-        this.dialogTitle = 'Edit Extra Route'
-        this.selectedRecord.id = data.id
-        this.selectedRecord.driver_id = data.driver_id
-        this.selectedRecord.route_id = data.route_id
-        this.selectedRecord.report_date = data.report_date
-      }
-      this.showDetail = true
-    },
-    addGroup () {
-      this.$router.push('/dashboard/schedules/new')
-    },
-    cancelDetail () {
-      this.showDetail = false
-      this.selectedRecord = {}
-    },
-    async onSubmit () {
-      // this.selectedRecord.report_date = date.formatDate(date.addToDate(this.selectedRecord.report_date, { days: 1 }), 'YYYY-MM-DD')
-      if (!this.selectedRecord.driver_id) {
-        this.selectedRecord.driver_id = 'RNC'
-      }
-      const params = {
-        data: this.selectedRecord
-      }
-      params.conditions = {
-        id: this.selectedRecord.id
-      }
-      Loading.show()
-      try {
-        let res = await api.updateSingleRecord(params)
-        Loading.hide()
-        console.log('result', res.data)
-      } catch (error) {
-        Loading.hide()
-        console.log('error', error)
-      }
-      this.cancelDetail()
-      this.getMonthlyListByDriver({
-        pagination: this.pagination,
-        filter: this.filter
-      })
-      console.log('selected record', this.selectedRecord)
-    },
-    getExtraRoutes: async function () {
-      Loading.show()
-      try {
-        let res = await api.getExtraRoutes()
-        Loading.hide()
-        this.routes = res.data.data
-      } catch (e) {
-        Loading.hide()
-        // this.$router.push('/dashboard/schedules')
-      }
-    },
-    getDriverList: async function () {
-      Loading.show()
-      try {
-        let res = await api.getDriverList()
-        Loading.hide()
-        this.drivers = res.data.data
-      } catch (e) {
-        Loading.hide()
-        // this.$router.push('/dashboard/schedules')
-      }
-    },
-    filterFn (val, update, abort) {
-      update(() => {
-        if (val === '') {
-          this.filteredNames = []
-        } else {
-          const needle = val.toLowerCase()
-          this.filteredNames = this.drivers.filter(name => name.driver_name.toLowerCase().indexOf(needle) > -1)
-          this.filteredNames = this.filteredNames.slice(0, 3)
-        }
-      },
-      ref => {
-        if (val !== '' && ref.options.length > 0) {
-          const matchedName = ref.options.find(item => item.driver_name.toLowerCase() === val.toLowerCase())
-          if (matchedName) {
-            ref.add(matchedName)
-          }
-        }
-      })
-    },
-
     async onScroll ({ index, from, to, ref }) {
       let { page, rowsPerPage, rowsNumber } = this.pagination
       const lastIndex = this.monthlyList.length - 1
@@ -555,40 +318,6 @@ export default {
         Loading.hide()
         console.log('errorrrrrrrrrr', e)
       }
-    },
-    remove (report) {
-      // Confirm Remove Vehicle
-      this.$q.dialog({
-        title: 'Confirm',
-        message: 'Are you surely remove ' + report.report_title + '?',
-        cancel: true,
-        persistent: true
-      }).onOk(async () => {
-        const params = {
-          conditions: {
-            id: report.id
-          }
-        }
-        Loading.show()
-        try {
-          let res = await api.removeReport(params)
-          Loading.hide()
-          console.log('remove result', res)
-          this.$q.notify({
-            color: 'positive',
-            position: 'top',
-            message: report.report_title + ' is removed successfully !'
-          })
-          this.getMonthlyListByDriver({
-            pagination: this.pagination,
-            filter: this.filter
-          })
-        } catch (e) {
-          Loading.hide()
-        }
-      }).onCancel(() => {
-      }).onDismiss(() => {
-      })
     },
     async exportTable () {
       // get All records before export

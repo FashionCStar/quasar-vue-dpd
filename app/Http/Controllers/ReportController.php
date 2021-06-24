@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Input;
 use App\Report;
 use App\Driver;
 use App\Route;
+use App\User;
 use Illuminate\Support\Facades\Auth;
 use Mockery\Undefined;
 
@@ -294,13 +295,28 @@ class ReportController extends Controller
       $endDate = $request['endDate'];
       $isDateFilter = $request['conditions']['is_date_filter'];
       
+      $users = User::where('parent_id', $user->id)->select('id')->get();
+      $userIDs = [];
+      array_push($userIDs, $user->id);
+      for ($i = 0; $i<count($users); $i++) {
+        array_push($userIDs, $users[$i]->id);
+      }
+
       $reports = Report::with(['user']);
       if ($isDateFilter) {
         $reports = $reports->where('report_date', '>=', $fromDate)->where('report_date', '<=', $endDate);
       }
-      if ($user->user_type != 0) {
-        $reports = $reports->whereUserId($user->id);
+      // if ($user->user_type != 0) {
+      //   $reports = $reports->whereUserId($user->id);
+      // }
+      if ($user->user_type != '0') {
+        if ($user->user_type == '1') {
+          $reports = $reports->whereIn('user_id', $userIDs);
+        } else {
+          $reports = $reports->where('user_id', $user->id);
+        }
       }
+
       $reports = $reports->select(['id', 'report_date', 'report_no', 'user_id', 'driver_id', 'route_id', 'is_group', 'created_at'])->groupBy('report_no')->orderBy($sortBy, $desc);
 
       $totalCount = count($reports->get());
@@ -362,7 +378,17 @@ class ReportController extends Controller
       $endDate = $request['endDate'];
       $isDateFilter = $request['conditions']['is_date_filter'];
 
-      $reports = Report::with(['user'])->leftJoin('drivers', 'drivers.id', '=', 'reports.driver_id')->leftJoin('routes', 'routes.id', '=', 'reports.route_id');
+      $users = User::where('parent_id', $user->id)->select('id')->get();
+      $userIDs = [];
+      array_push($userIDs, $user->id);
+      for ($i = 0; $i<count($users); $i++) {
+        array_push($userIDs, $users[$i]->id);
+      }
+
+      $reports = Report::with(['user'])
+                ->leftJoin('drivers', 'drivers.id', '=', 'reports.driver_id')
+                ->leftJoin('routes', 'routes.id', '=', 'reports.route_id')
+                ->leftJoin('depots', 'depots.id', '=', 'routes.depot_id');
       if ($isDateFilter) {
         $reports = $reports->where('reports.report_date', '>=', $fromDate)->where('reports.report_date', '<=', $endDate);
       }
@@ -375,9 +401,13 @@ class ReportController extends Controller
         });
       }
       if ($user->user_type != '0') {
-        $reports = $reports->where('reports.user_id', $user->id);
+        if ($user->user_type == '1') {
+          $reports = $reports->whereIn('reports.user_id', $userIDs);
+        } else {
+          $reports = $reports->where('reports.user_id', $user->id);
+        }
       }
-      $reports = $reports->select('reports.id', 'reports.driver_id', 'reports.route_id', 'reports.report_title', 'reports.report_date', 'reports.report_no', 'drivers.driver_name', 'routes.route_number', 'is_group', 'pay_type', 'vat_percentage', 'pay_amount', 'stops', 'reports.created_at', 'reports.user_id')->orderBy($sortBy, $desc);
+      $reports = $reports->select('reports.id', 'reports.driver_id', 'reports.route_id', 'reports.report_title', 'reports.report_date', 'reports.report_no', 'drivers.driver_name', 'routes.route_number', 'is_group', 'pay_type', 'vat_percentage', 'pay_amount', 'stops', 'reports.created_at', 'reports.user_id', 'depots.depot_location')->orderBy($sortBy, $desc);
       $totalCount = count($reports->get());
       $reports = $reports->skip($start)->take($numPerPage)->get();
 
@@ -401,9 +431,27 @@ class ReportController extends Controller
 
       $isDateFilter = $request['conditions']['is_date_filter'];
 
-      $reports = Report::with(['user'])->leftJoin('drivers', 'drivers.id', '=', 'reports.driver_id')->leftJoin('routes', 'routes.id', '=', 'reports.route_id');
-      if ($user->user_type != 0) {
-        $reports = $reports->whereUserId($user->id);
+      $users = User::where('parent_id', $user->id)->select('id')->get();
+      $userIDs = [];
+      array_push($userIDs, $user->id);
+      for ($i = 0; $i<count($users); $i++) {
+        array_push($userIDs, $users[$i]->id);
+      }
+
+      $reports = Report::with(['user'])
+                ->leftJoin('drivers', 'drivers.id', '=', 'reports.driver_id')
+                ->leftJoin('routes', 'routes.id', '=', 'reports.route_id')
+                ->leftJoin('depots', 'depots.id', '=', 'routes.depot_id');
+      // if ($user->user_type != 0) {
+      //   $reports = $reports->whereUserId($user->id);
+      // }
+      
+      if ($user->user_type != '0') {
+        if ($user->user_type == '1') {
+          $reports = $reports->whereIn('reports.user_id', $userIDs);
+        } else {
+          $reports = $reports->where('reports.user_id', $user->id);
+        }
       }
       if ($isDateFilter) {
         $reports = $reports->where('reports.report_date', '>=', $fromDate)->where('reports.report_date', '<=', $endDate);
@@ -415,7 +463,7 @@ class ReportController extends Controller
             ->orWhere('route_number', 'like', '%' . $search . '%');
         });
       }
-      $reports = $reports->select('reports.id', 'reports.driver_id', 'reports.route_id', 'reports.report_title', 'reports.report_date', 'reports.report_no', 'drivers.driver_name', 'routes.route_number', 'is_group', 'stops', 'reports.created_at', 'reports.user_id')->orderBy($sortBy, 'DESC')->get();
+      $reports = $reports->select('reports.id', 'reports.driver_id', 'reports.route_id', 'reports.report_title', 'reports.report_date', 'reports.report_no', 'drivers.driver_name', 'routes.route_number', 'is_group', 'stops', 'reports.created_at', 'reports.user_id', 'depots.depot_location')->orderBy($sortBy, 'DESC')->get();
 
       $totalCount = count($reports);
       if ($totalCount == 0) {

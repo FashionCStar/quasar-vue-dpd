@@ -46,7 +46,7 @@
               <q-td key="phone" :props="props">{{ props.row.phone }}</q-td>
               <q-td key="zipcode" :props="props">{{ props.row.zipcode }}</q-td>
               <q-td key="depot_location" :props="props">{{ props.row.depot_location }}</q-td>
-              <q-td key="parent_name" :props="props">{{ props.row.parent_name }}</q-td>
+              <q-td key="parent_name" :props="props">{{ props.row.parent_username }}</q-td>
               <q-td key="active_status" :props="props">{{ props.row.is_active?'ACTIVATED':'DEACTIVATED' }}</q-td>
               <q-td key="buttons" :props="props">
                 <q-btn

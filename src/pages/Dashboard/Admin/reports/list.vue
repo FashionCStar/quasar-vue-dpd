@@ -5,7 +5,7 @@
         <q-table
           :class="is_mobile === 'ios'?'my-sticky-dynamic table-top-ios':is_mobile==='android'?'my-sticky-dynamic table-top-android': 'my-sticky-dynamic'"
           :data="reportList"
-          :columns="userLevel === 'admin' ? columns_admin : columns"
+          :columns="userLevel !== 'user' ? columns_admin : columns"
           row-key="report_date"
           :filter="filter"
           @request="getReportList"
@@ -68,7 +68,7 @@
               <q-td key="no" :props="props">{{ props.row.index }}</q-td>
               <q-td key="report_date" :props="props" class="text-uppercase">{{ changeDateFormat(props.row.report_date) }}</q-td>
               <q-td key="is_group" :props="props">{{ props.row.is_group === 1 ? 'DAILY' : 'EXTRA' }}</q-td>
-              <q-td v-if="userLevel === 'admin'" key="full_name" :props="props">{{ props.row.user.full_name }}</q-td>
+              <q-td v-if="userLevel !== 'user'" key="full_name" :props="props">{{ props.row.user.name }}</q-td>
               <q-td key="buttons" :props="props">
                 <q-btn
                   rounded
@@ -287,7 +287,6 @@
                   rounded
                   style="width: 100px; height:40px;"
                   type="submit"
-                  :disable="!depot_id || !extraRoutes.length"
                 />
               </q-card-actions>
             </q-form>
@@ -436,7 +435,6 @@
                     rounded
                     style="width: 100px; height:40px"
                     type="submit"
-                    :disable="!depot_id || !dailyRoutes.length"
                   />
                 </div>
               </q-card-actions>
@@ -680,7 +678,7 @@ export default {
     },
     exportTable () {
       // naive encoding to csv format
-      let columns = this.userLevel === 'admin' ? this.columns_admin : this.columns
+      let columns = this.userLevel !== 'user' ? this.columns_admin : this.columns
       const content = [ columns.map(col => wrapCsvValue(col.label)) ].concat(
         this.reportList.map(row => columns.map(col => {
           if (col.field === 'is_group') {

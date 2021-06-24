@@ -6,7 +6,7 @@
           :class="is_mobile === 'ios'?'my-sticky-dynamic table-top-ios':is_mobile==='android'?'my-sticky-dynamic table-top-android': 'my-sticky-dynamic'"
           title="DRIVERS"
           :data="driverList"
-          :columns="userLevel === 'admin' ? columns_admin : columns"
+          :columns="userLevel !== 'user' ? columns_admin : columns"
           row-key="driver_name"
           :pagination.sync="pagination"
           :filter="filter"
@@ -38,12 +38,12 @@
               <q-td key="driver_name" :props="props">{{ props.row.driver_name }}</q-td>
               <q-td key="email" :props="props">{{ props.row.email }}</q-td>
               <q-td key="phone" :props="props">{{ props.row.phone }}</q-td>
-              <q-td key="depot_location" :props="props">{{ props.row.depot.depot_location }}</q-td>
+              <q-td key="depot_location" :props="props">{{ props.row.depot?props.row.depot.depot_location:'' }}</q-td>
               <q-td key="pay_type" :props="props">{{ props.row.pay_type === 'per_stop' ? 'PAY PER STOP' : 'FIXED RATE' }}</q-td>
               <q-td key="pay_amount" :props="props">{{ '£' + props.row.pay_amount }}</q-td>
               <q-td key="vat_percentage" :props="props">{{ props.row.vat_percentage * 100 + '%' }}</q-td>
               <q-td key="has_access" :props="props">{{ props.row.has_access ? 'YES':'NO' }}</q-td>
-              <q-td v-if="userLevel === 'admin'" key="user_name" :props="props">{{ props.row.user.full_name }}</q-td>
+              <q-td v-if="userLevel !== 'user'" key="user_name" :props="props">{{ props.row.user.name }}</q-td>
               <!-- <q-td key="buttons" :props="props">
                 <q-btn
                   flat
